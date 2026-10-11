@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useId, useRef, useState } from 'react';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
+import { requestUploadUrl } from '@/app/forms/[id]/upload-action';
 
-const MAX_SIZE = 10 * 1024 * 1024;
+const MAX_SIZE = 10_000_000; // same limit as the storage bucket
 const ALLOWED_TYPES = [
   'application/pdf',
   'application/msword',
@@ -33,9 +35,11 @@ export function FileUploadField({ value, onChange }: FileUploadFieldProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileName = getStoredFileName(value);
 
-  const handleFile = useCallback((file: File) => {
+  // Upload straight to private storage; the form answer only keeps the name and storage path
+  const handleFile = useCallback(async (file: File) => {
     setError(null);
     if (file.size > MAX_SIZE) {
       setError('הקובץ גדול מ-10MB');
@@ -45,12 +49,26 @@ export function FileUploadField({ value, onChange }: FileUploadFieldProps) {
       setError('סוג קובץ לא נתמך. אפשר להעלות PDF, Word או תמונה (JPG/PNG)');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      onChange(JSON.stringify({ name: file.name, data: result, type: file.type }));
-    };
-    reader.readAsDataURL(file);
+    setIsUploading(true);
+    try {
+      const target = await requestUploadUrl(file.name, file.type, file.size);
+      if (!target.ok) {
+        setError(target.error);
+        return;
+      }
+      const { error: uploadError } = await createClient()
+        .storage.from('uploads')
+        .uploadToSignedUrl(target.path, target.token, file, { contentType: file.type });
+      if (uploadError) {
+        setError('העלאת הקובץ נכשלה, נסי שוב');
+        return;
+      }
+      onChange(JSON.stringify({ name: file.name, path: target.path }));
+    } catch {
+      setError('העלאת הקובץ נכשלה, נסי שוב');
+    } finally {
+      setIsUploading(false);
+    }
   }, [onChange]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -70,14 +88,19 @@ export function FileUploadField({ value, onChange }: FileUploadFieldProps) {
     <div
       className={cn(
         'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
-        !fileName && 'cursor-pointer hover:border-brand-500',
+        !fileName && !isUploading && 'cursor-pointer hover:border-brand-500',
         error && 'border-destructive'
       )}
-      onClick={fileName ? undefined : openPicker}
+      onClick={fileName || isUploading ? undefined : openPicker}
       onDrop={onDrop}
       onDragOver={(e) => e.preventDefault()}
     >
-      {fileName ? (
+      {isUploading ? (
+        <>
+          <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-brand-teal" />
+          <p className="text-sm text-muted-foreground">מעלה את הקובץ...</p>
+        </>
+      ) : fileName ? (
         <>
           <FileText className="h-8 w-8 mx-auto mb-2 text-brand-500" />
           <p className="text-sm font-medium break-all">{fileName}</p>

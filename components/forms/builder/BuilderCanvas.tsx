@@ -43,7 +43,7 @@ function SortableField({ field, onDelete }: { field: FormField; onDelete: (field
       style={style}
       className={cn(
         'flex items-center gap-2 p-3 border rounded-lg bg-white cursor-pointer hover:border-brand-500 transition-colors',
-        isSelected && 'ring-2 ring-brand-500 bg-brand-50',
+        isSelected && 'ring-2 ring-brand-cyan bg-brand-cyan-50',
         isDragging && 'opacity-50'
       )}
       onClick={() => selectField(field.id)}

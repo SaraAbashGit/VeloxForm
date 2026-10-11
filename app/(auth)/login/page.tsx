@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { AuthForm } from '@/components/auth/AuthForm';
 import { signIn } from '../actions';
 
 export default function LoginPage() {
@@ -14,7 +14,7 @@ export default function LoginPage() {
           <CardDescription>היכנס לחשבון העסק שלך</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={signIn} className="space-y-4">
+          <AuthForm action={signIn} submitLabel="התחבר" pendingLabel="מתחבר...">
             <div className="space-y-2">
               <Label htmlFor="email">אימייל</Label>
               <Input id="email" name="email" type="email" required dir="ltr" />
@@ -23,8 +23,7 @@ export default function LoginPage() {
               <Label htmlFor="password">סיסמה</Label>
               <Input id="password" name="password" type="password" required dir="ltr" />
             </div>
-            <Button type="submit" className="w-full">התחבר</Button>
-          </form>
+          </AuthForm>
           <div className="mt-4 text-center text-sm space-y-2">
             <Link href="/register" className="text-brand-500 hover:underline block">אין לך חשבון? הירשם</Link>
             <Link href="/reset-password" className="text-muted-foreground hover:underline block">שכחת סיסמה?</Link>

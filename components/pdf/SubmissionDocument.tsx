@@ -42,6 +42,7 @@ export function SubmissionDocument({ form, answers }: SubmissionDocumentProps) {
             <View key={field.id} style={styles.field}>
               <Text style={styles.label}>{field.label}</Text>
               {isSignature ? (
+                // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt prop
                 <Image src={value} style={styles.signature} />
               ) : isFile ? (
                 <Text style={styles.value}>

@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { Sidebar, MobileNav } from '@/components/dashboard/Sidebar';
+import { Logo } from '@/components/brand/Logo';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -6,7 +8,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="hidden md:block">
         <Sidebar />
       </div>
-      <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">{children}</main>
+      <div className="flex-1 min-w-0">
+        {/* Mobile top bar with the logo (the sidebar is hidden on small screens) */}
+        <header className="md:hidden bg-brand-600 px-4 py-3">
+          <Link href="/dashboard">
+            <Logo tone="light" size="sm" />
+          </Link>
+        </header>
+        <main className="p-4 md:p-8 pb-24 md:pb-8">{children}</main>
+      </div>
       <MobileNav />
     </div>
   );

@@ -47,13 +47,13 @@ export function ProfileForm({ businessName, email }: ProfileFormProps) {
             autoFocus
           />
         ) : (
-          <p className="py-2 font-medium">{businessName}</p>
+          <p className="rounded-md bg-brand-sage-50 px-3 py-2 font-medium">{businessName}</p>
         )}
       </div>
 
       <div className="space-y-2">
         <Label>אימייל</Label>
-        <p className="py-2 text-muted-foreground text-right" dir="ltr">{email}</p>
+        <p className="rounded-md bg-brand-sage-50 px-3 py-2 text-muted-foreground text-right" dir="ltr">{email}</p>
       </div>
 
       {isEditing ? (

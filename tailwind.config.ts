@@ -10,13 +10,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Brand palette: #191918 (ink), #294248 (deep teal), #64ccd0 (cyan), #879983 (sage)
+        // Contrast: cyan takes ink text, never white; cyan/sage are never text on white (use cyan-700)
         brand: {
-          50: '#eef2ff',
-          500: '#6366f1',
-          600: '#4f46e5',
-          900: '#1e1b4b',
+          50: '#e3f6f6', // cyan tint: selected states
+          100: '#879983', // sage: secondary text on dark, decorative
+          500: '#294248', // deep teal: text, icons, secondary surfaces
+          600: '#191918', // ink: brand frame (sidebar, hero)
+          900: '#191918',
+          ink: '#191918',
+          teal: '#294248',
+          cyan: { DEFAULT: '#64ccd0', hover: '#4fbfc4', 50: '#e3f6f6', 700: '#1a7478' },
+          sage: { DEFAULT: '#879983', 50: '#eef1ec' },
         },
-        surface: '#f8fafc',
+        surface: '#f6f7f5',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
@@ -30,8 +37,8 @@ const config: Config = {
         ring: 'hsl(var(--ring))',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'sans-serif'],
-        display: ['var(--font-cairo)', 'sans-serif'],
+        sans: ['var(--font-heebo)', 'sans-serif'],
+        display: ['var(--font-rubik)', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',

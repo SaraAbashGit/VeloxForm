@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { AuthForm } from '@/components/auth/AuthForm';
 import { signUp } from '../actions';
 
 export default function RegisterPage() {
@@ -14,7 +14,7 @@ export default function RegisterPage() {
           <CardDescription>צור חשבון עסק חדש</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={signUp} className="space-y-4">
+          <AuthForm action={signUp} submitLabel="הירשם" pendingLabel="נרשם...">
             <div className="space-y-2">
               <Label htmlFor="business_name">שם העסק</Label>
               <Input id="business_name" name="business_name" required />
@@ -27,8 +27,7 @@ export default function RegisterPage() {
               <Label htmlFor="password">סיסמה</Label>
               <Input id="password" name="password" type="password" required minLength={6} dir="ltr" />
             </div>
-            <Button type="submit" className="w-full">הירשם</Button>
-          </form>
+          </AuthForm>
           <p className="mt-4 text-center text-sm">
             <Link href="/login" className="text-brand-500 hover:underline">כבר יש לך חשבון? התחבר</Link>
           </p>

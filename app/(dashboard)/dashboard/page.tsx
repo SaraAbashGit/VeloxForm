@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Inbox, Clock } from 'lucide-react';
+import { FileText, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { CopyLinkButton } from '@/components/dashboard/CopyLinkButton';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -19,6 +21,8 @@ export default async function DashboardPage() {
   const { data: forms } = await supabase
     .from('forms')
     .select('id, title, slug, created_at')
+    // RLS also lets anyone read active forms (for the public page), so filter by owner explicitly
+    .eq('user_id', user?.id)
     .order('created_at', { ascending: false });
 
   const formIds = forms?.map((f) => f.id) ?? [];
@@ -38,29 +42,51 @@ export default async function DashboardPage() {
       .in('form_id', formIds)
       .order('submitted_at', { ascending: false })
       .limit(5);
-    recentSubmissions = (data ?? []) as typeof recentSubmissions;
+    // forms(title) is many-to-one, so Supabase returns an object at runtime even though the generated type says array
+    recentSubmissions = (data ?? []) as unknown as typeof recentSubmissions;
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold font-display">לוח בקרה</h1>
-          <p className="text-muted-foreground">שלום, {profile?.business_name ?? user?.email}</p>
-        </div>
-        <Button asChild>
-          <Link href="/forms/new">+ טופס חדש עם AI</Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="לוח בקרה"
+        subtitle={`שלום, ${profile?.business_name ?? user?.email}`}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/forms/new">+ טופס חדש עם AI</Link>
+            </Button>
+            <Button asChild variant="outline" className="border-brand-sage text-white hover:bg-white/10">
+              <Link href={`/b/${user?.id}`} target="_blank">
+                <ExternalLink className="h-4 w-4" />
+                העמוד העסקי שלי
+              </Link>
+            </Button>
+            <CopyLinkButton
+              path={`/b/${user?.id}`}
+              label="העתק קישור"
+              variant="ghost"
+              className="text-brand-sage hover:bg-white/10 hover:text-white"
+            />
+          </div>
+        }
+      />
 
       <StatsCards formCount={forms?.length ?? 0} submissionCount={submissionCount} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5" />
-              הטפסים שלי
+            <CardTitle className="flex items-center justify-between text-lg">
+              <span className="flex items-center gap-2">
+                <span className="rounded-full bg-brand-500 p-1.5 text-white">
+                  <FileText className="h-4 w-4" />
+                </span>
+                הטפסים שלי
+              </span>
+              <Link href="/forms" className="text-sm font-medium text-brand-cyan-700 hover:underline">
+                לכל הטפסים
+              </Link>
             </CardTitle>
           </CardHeader>
           <CardContent>
