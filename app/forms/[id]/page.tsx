@@ -4,6 +4,9 @@ import { PublicFormClient } from './PublicFormClient';
 import { Logo } from '@/components/brand/Logo';
 import type { Form, FormField } from '@/types/form';
 
+// Submitting renders the PDF and sends email, which can exceed Vercel's default function timeout
+export const maxDuration = 60;
+
 export default async function PublicFormPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
 
