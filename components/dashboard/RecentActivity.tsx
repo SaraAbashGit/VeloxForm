@@ -15,7 +15,9 @@ export function RecentActivity({ submissions }: RecentActivityProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Clock className="h-5 w-5" />
+          <span className="rounded-md bg-brand-600 p-1.5 text-white">
+            <Clock className="h-4 w-4" />
+          </span>
           פעילות אחרונה
         </CardTitle>
       </CardHeader>

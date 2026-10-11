@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { submitForm } from './actions';
 import type { Form, FormField } from '@/types/form';
 import { toast } from 'sonner';
-import { CheckCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { GeometricPattern } from '@/components/brand/GeometricPattern';
 
 interface PublicFormClientProps {
   form: Form;
@@ -31,23 +32,31 @@ export function PublicFormClient({ form, fields }: PublicFormClientProps) {
 
   if (submitted) {
     return (
-      <Card className="max-w-lg mx-auto text-center">
+      <Card className="max-w-lg mx-auto overflow-hidden text-center">
+        <div className="h-12 overflow-hidden">
+          <GeometricPattern className="h-full w-full" />
+        </div>
         <CardContent className="pt-12 pb-12">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold font-display mb-2">תודה!</h2>
-          <p className="text-muted-foreground">הטופס נשלח בהצלחה</p>
+          <span className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-cyan">
+            <Check className="h-10 w-10 text-brand-ink" strokeWidth={3} />
+          </span>
+          <h2 className="text-2xl font-bold font-display mb-2">תודה! הטופס נשלח בהצלחה</h2>
+          <p className="text-muted-foreground">{form.title} · {new Date().toLocaleDateString('he-IL')}</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
+    <Card className="max-w-2xl mx-auto overflow-hidden">
+      <div className="h-16 overflow-hidden">
+        <GeometricPattern className="h-full w-full" />
+      </div>
+      <CardHeader className="bg-brand-teal text-white">
         <CardTitle className="font-display">{form.title}</CardTitle>
-        {form.description && <CardDescription>{form.description}</CardDescription>}
+        {form.description && <CardDescription className="text-white/80">{form.description}</CardDescription>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <FormRenderer fields={fields} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       </CardContent>
     </Card>

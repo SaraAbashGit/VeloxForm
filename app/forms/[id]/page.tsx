@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { PublicFormClient } from './PublicFormClient';
+import { Logo } from '@/components/brand/Logo';
 import type { Form, FormField } from '@/types/form';
 
 export default async function PublicFormPage({ params }: { params: { id: string } }) {
@@ -24,6 +25,10 @@ export default async function PublicFormPage({ params }: { params: { id: string 
   return (
     <div className="min-h-screen bg-surface py-8 px-4">
       <PublicFormClient form={form as Form} fields={(fields ?? []) as FormField[]} />
+      <footer className="mt-8 flex justify-center items-center gap-2 text-xs text-muted-foreground">
+        נוצר באמצעות
+        <Logo size="sm" />
+      </footer>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import type { Form, FormField } from '@/types/form';
+import { getSignedUrl, parseStoredFile } from '@/lib/storage';
 
 export default async function SubmissionDetailPage({
   params,
@@ -40,6 +41,18 @@ export default async function SubmissionDetailPage({
     )
   );
 
+  // Signatures and files live in private storage; ownership was checked above, so sign short-lived links
+  const fileLinks: Record<string, { name: string; url: string | null }> = {};
+  for (const field of fields) {
+    const value: string = answers[field.id] ?? '';
+    if (field.type === 'signature' && value.startsWith('signatures/')) {
+      fileLinks[field.id] = { name: 'חתימה', url: await getSignedUrl(value) };
+    } else if (field.type === 'file_upload') {
+      const file = parseStoredFile(value);
+      if (file) fileLinks[field.id] = { name: file.name, url: await getSignedUrl(file.ref, file.name) };
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
@@ -47,7 +60,7 @@ export default async function SubmissionDetailPage({
         <div className="flex gap-2">
           {submission.pdf_url && (
             <Button variant="outline" size="sm" asChild>
-              <a href={submission.pdf_url} target="_blank" rel="noopener noreferrer">
+              <a href={`/forms/${params.id}/submissions/${submission.id}/pdf`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 me-1" />
                 הורד PDF
               </a>
@@ -69,13 +82,23 @@ export default async function SubmissionDetailPage({
         <CardContent className="space-y-4">
           {fields.map((field) => {
             const value = answers[field.id] ?? '';
-            const isSignature = field.type === 'signature' && value.startsWith('http');
+            const link = fileLinks[field.id];
 
             return (
               <div key={field.id} className="border-b pb-4 last:border-0">
                 <p className="text-sm font-medium text-muted-foreground">{field.label}</p>
-                {isSignature ? (
-                  <img src={value} alt="חתימה" className="mt-2 max-w-xs border rounded" />
+                {field.type === 'signature' && link?.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={link.url} alt="חתימה" className="mt-2 max-w-xs rounded border-2 border-dashed border-brand-sage bg-white p-2" />
+                ) : field.type === 'file_upload' && link ? (
+                  link.url ? (
+                    <a href={link.url} className="mt-1 inline-flex items-center gap-2 text-brand-cyan-700 hover:underline">
+                      <ExternalLink className="h-4 w-4" />
+                      {link.name}
+                    </a>
+                  ) : (
+                    <p className="mt-1">{link.name}</p>
+                  )
                 ) : (
                   <p className="mt-1">{value || '—'}</p>
                 )}

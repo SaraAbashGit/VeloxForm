@@ -1,5 +1,16 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+
+// Business-owner pages. /forms/<slug> alone is the public form and stays open.
+function isBusinessArea(path: string) {
+  return (
+    path.startsWith('/dashboard') ||
+    path.startsWith('/profile') ||
+    path === '/forms' ||
+    path === '/forms/new' ||
+    /^\/forms\/[^/]+\/(edit|submissions)(\/|$)/.test(path)
+  );
+}
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -12,7 +23,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -27,17 +38,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!user && isBusinessArea(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  if (request.nextUrl.pathname.startsWith('/forms/')) {
-    return supabaseResponse;
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/forms/:path*', '/(auth)/:path*'],
+  matcher: ['/dashboard/:path*', '/profile/:path*', '/forms/:path*', '/(auth)/:path*'],
 };

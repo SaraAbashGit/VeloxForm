@@ -4,24 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Brand palette: #191918 ink, #294248 deep teal, #64ccd0 cyan, #879983 sage */
+    --background: 90 11% 96.5%; /* #f6f7f5 */
+    --foreground: 192 27% 22%; /* #294248 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 239 84% 67%;
-    --radius: 0.5rem;
+    --card-foreground: 192 27% 22%;
+    --primary: 182 53% 60%; /* #64ccd0 */
+    --primary-foreground: 60 2% 10%; /* #191918 */
+    --secondary: 96 15% 93.5%; /* #eef1ec */
+    --secondary-foreground: 192 27% 22%;
+    --muted: 96 15% 93.5%;
+    --muted-foreground: 189 10% 39%; /* #5a6b6e */
+    --accent: 180 51% 93%; /* #e3f6f6 */
+    --accent-foreground: 192 27% 22%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 111 10% 86%; /* #d9dfd8 */
+    --input: 111 10% 86%;
+    --ring: 183 64% 29%; /* #1a7478 */
+    --radius: 0.375rem;
   }
 }
 

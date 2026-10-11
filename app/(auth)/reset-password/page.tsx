@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { AuthForm } from '@/components/auth/AuthForm';
 import Link from 'next/link';
 import { resetPassword } from '../actions';
 
@@ -14,13 +14,12 @@ export default function ResetPasswordPage() {
           <CardDescription>הזן את האימייל שלך ונשלח קישור לאיפוס</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={resetPassword} className="space-y-4">
+          <AuthForm action={resetPassword} submitLabel="שלח קישור" pendingLabel="שולח...">
             <div className="space-y-2">
               <Label htmlFor="email">אימייל</Label>
               <Input id="email" name="email" type="email" required dir="ltr" />
             </div>
-            <Button type="submit" className="w-full">שלח קישור</Button>
-          </form>
+          </AuthForm>
           <p className="mt-4 text-center text-sm">
             <Link href="/login" className="text-brand-500 hover:underline">חזרה להתחברות</Link>
           </p>

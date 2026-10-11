@@ -25,7 +25,7 @@ export function SignatureCanvas({ onChange, value }: SignatureCanvasProps) {
       canvas.width = Math.round(canvas.clientWidth * dpr);
       canvas.height = Math.round(canvas.clientHeight * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.strokeStyle = '#1a1a2e';
+      ctx.strokeStyle = '#294248';
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -96,7 +96,7 @@ export function SignatureCanvas({ onChange, value }: SignatureCanvasProps) {
     <div className="flex flex-col gap-2">
       <canvas
         ref={canvasRef}
-        className="border-2 border-dashed border-gray-300 rounded-lg w-full h-40 touch-none bg-white cursor-crosshair"
+        className="border-2 border-dashed border-brand-100 rounded-lg w-full h-40 touch-none bg-white cursor-crosshair"
       />
       {!isEmpty && (
         <Button variant="ghost" size="sm" onClick={clear} type="button">

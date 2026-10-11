@@ -74,8 +74,9 @@ export default async function SubmissionsPage({ params }: { params: { id: string
                       </Button>
                       {sub.pdf_url && (
                         <Button variant="ghost" size="sm" asChild>
-                          <a href={sub.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <a href={`/forms/${params.id}/submissions/${sub.id}/pdf`} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" />
+                            PDF
                           </a>
                         </Button>
                       )}
