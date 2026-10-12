@@ -64,7 +64,8 @@ export default async function SubmissionDetailPage({
       fileLinks[field.id] = { name: 'חתימה', url: await getSignedUrl(value) };
     } else if (field.type === 'file_upload') {
       const file = parseStoredFile(value);
-      if (file) fileLinks[field.id] = { name: file.name, url: await getSignedUrl(file.ref, file.name) };
+      // Served through our own route, not a storage link: some networks block storage downloads
+      if (file) fileLinks[field.id] = { name: file.name, url: `/forms/${params.id}/submissions/${params.submissionId}/file?field=${field.id}` };
     }
   }
 
@@ -107,7 +108,7 @@ export default async function SubmissionDetailPage({
                   <img src={link.url} alt="חתימה" className="mt-2 max-w-xs rounded border-2 border-dashed border-brand-sage bg-white p-2" />
                 ) : field.type === 'file_upload' && link ? (
                   link.url ? (
-                    <a href={link.url} className="mt-1 inline-flex items-center gap-2 text-brand-cyan-700 hover:underline">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-2 text-brand-cyan-700 hover:underline">
                       <ExternalLink className="h-4 w-4" />
                       {link.name}
                     </a>
