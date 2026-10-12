@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isClientUser } from '@/lib/auth/roles';
 
 // Business-owner pages. /forms/<slug> alone is the public form and stays open.
 function isBusinessArea(path: string) {
@@ -38,13 +39,21 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && isBusinessArea(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  const path = request.nextUrl.pathname;
+
+  if (isBusinessArea(path)) {
+    if (!user) return NextResponse.redirect(new URL('/login', request.url));
+    // Customers have their own area and never see the business dashboard
+    if (isClientUser(user)) return NextResponse.redirect(new URL('/my', request.url));
+  }
+
+  if (!user && path.startsWith('/my')) {
+    return NextResponse.redirect(new URL('/client/login?next=/my', request.url));
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/profile/:path*', '/forms/:path*', '/(auth)/:path*'],
+  matcher: ['/dashboard/:path*', '/profile/:path*', '/forms/:path*', '/my/:path*'],
 };

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getSignedUrl } from '@/lib/storage';
+import { pdfResponse } from '@/lib/storage';
 
-// The PDF bucket is private: check ownership with the user's own session, then redirect to a short-lived signed URL
+// The PDF bucket is private: check ownership with the user's own session, then serve the file
 export async function GET(_request: Request, { params }: { params: { id: string; submissionId: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,7 +18,5 @@ export async function GET(_request: Request, { params }: { params: { id: string;
 
   if (!submission?.pdf_url) return new NextResponse('Not found', { status: 404 });
 
-  const url = await getSignedUrl(submission.pdf_url, `submission-${submission.id}.pdf`);
-  if (!url) return new NextResponse('Not found', { status: 404 });
-  return NextResponse.redirect(url);
+  return pdfResponse(submission.pdf_url, `submission-${submission.id}.pdf`);
 }

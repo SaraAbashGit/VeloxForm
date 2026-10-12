@@ -1,6 +1,8 @@
 'use server';
 
 import { createServiceClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import { isClientUser } from '@/lib/auth/roles';
 import { generateSubmissionPdf } from '@/lib/pdf/generate-submission-pdf';
 import { sendSubmissionNotification } from '@/lib/email';
 import { APP_URL } from '@/lib/app-url';
@@ -42,9 +44,13 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
     form_fields: fields,
   };
 
+  // A signed-in customer gets the submission linked to their account ("המסמכים שלי")
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  const clientId = isClientUser(user) ? user!.id : null;
+
   const { data: submission, error: subError } = await supabase
     .from('submissions')
-    .insert({ form_id: form.id, snapshot_json: snapshot })
+    .insert({ form_id: form.id, snapshot_json: snapshot, ...(clientId ? { client_id: clientId } : {}) })
     .select()
     .single();
 
