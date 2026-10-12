@@ -3,6 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/admin';
 import { generateSubmissionPdf } from '@/lib/pdf/generate-submission-pdf';
 import { sendSubmissionNotification } from '@/lib/email';
+import { APP_URL } from '@/lib/app-url';
 import { uploadSignature, confirmUpload } from '@/lib/storage';
 import type { Form, FormField, SubmissionAnswer } from '@/types/form';
 
@@ -103,7 +104,7 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
         formTitle: form.title,
         formId: form.id,
         submissionId: submission.id,
-        dashboardUrl: process.env.NEXT_PUBLIC_APP_URL!,
+        dashboardUrl: APP_URL,
       });
     } catch {
       // Email is best-effort

@@ -2,11 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { APP_URL } from '@/lib/app-url';
 
 // Shape returned to useFormState in the auth pages
 export type AuthState = { error?: string; success?: string } | undefined;
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
 // Supabase answers in English; show the common cases in Hebrew
 function translateError(message: string) {

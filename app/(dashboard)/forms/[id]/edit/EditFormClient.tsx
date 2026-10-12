@@ -62,10 +62,9 @@ export function EditFormClient({ form, fields }: EditFormClientProps) {
     });
   };
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL}/forms/${form.slug}`;
-
   const copyLink = () => {
-    navigator.clipboard.writeText(publicUrl);
+    // Built from the current address, so it is right both locally and on the deployed site
+    navigator.clipboard.writeText(`${window.location.origin}/forms/${form.slug}`);
     toast.success('הקישור הועתק');
   };
 

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { APP_URL } from '@/lib/app-url';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,7 +91,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
               <Inbox className="h-12 w-12 mx-auto mb-2 opacity-30" />
               <p>אין הגשות עדיין</p>
               <p className="text-sm mt-1">
-                שתף את הקישור: {process.env.NEXT_PUBLIC_APP_URL}/forms/{form.slug}
+                שתף את הקישור: {APP_URL}/forms/{form.slug}
               </p>
             </div>
           )}
