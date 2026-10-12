@@ -16,6 +16,15 @@ const ALLOWED_TYPES = [
   'image/png',
 ];
 
+const TYPE_BY_EXTENSION: Record<string, string> = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+};
+
 interface FileUploadFieldProps {
   value?: string;
   onChange: (value: string) => void;
@@ -41,31 +50,43 @@ export function FileUploadField({ value, onChange }: FileUploadFieldProps) {
   // Upload straight to private storage; the form answer only keeps the name and storage path
   const handleFile = useCallback(async (file: File) => {
     setError(null);
+    // Some phones/browsers report an empty or non-standard type: fall back to the file extension
+    const type = ALLOWED_TYPES.includes(file.type) ? file.type : TYPE_BY_EXTENSION[file.name.split('.').pop()?.toLowerCase() ?? ''];
     if (file.size > MAX_SIZE) {
       setError('הקובץ גדול מ-10MB');
       return;
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!type) {
       setError('סוג קובץ לא נתמך. אפשר להעלות PDF, Word או תמונה (JPG/PNG)');
       return;
     }
     setIsUploading(true);
     try {
-      const target = await requestUploadUrl(file.name, file.type, file.size);
+      let target: Awaited<ReturnType<typeof requestUploadUrl>>;
+      try {
+        target = await requestUploadUrl(file.name, type, file.size);
+      } catch (err) {
+        // Usually a page opened before the site was updated: its server actions no longer exist
+        console.error('requestUploadUrl failed:', err);
+        setError('אין חיבור לשרת. רעננו את הדף (F5) ונסו שוב');
+        return;
+      }
       if (!target.ok) {
         setError(target.error);
         return;
       }
       const { error: uploadError } = await createClient()
         .storage.from('uploads')
-        .uploadToSignedUrl(target.path, target.token, file, { contentType: file.type });
+        .uploadToSignedUrl(target.path, target.token, file, { contentType: type });
       if (uploadError) {
-        setError('העלאת הקובץ נכשלה, נסי שוב');
+        console.error('Storage upload failed:', uploadError);
+        setError('שמירת הקובץ נכשלה. ייתכן שהרשת חוסמת העלאת קבצים. נסו שוב או מרשת אחרת');
         return;
       }
       onChange(JSON.stringify({ name: file.name, path: target.path }));
-    } catch {
-      setError('העלאת הקובץ נכשלה, נסי שוב');
+    } catch (err) {
+      console.error('File upload failed:', err);
+      setError('העלאת הקובץ נכשלה. בדקו את החיבור לאינטרנט ונסו שוב');
     } finally {
       setIsUploading(false);
     }
