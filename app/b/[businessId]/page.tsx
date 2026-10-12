@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, FileText } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import { ClientBar } from '@/components/client/ClientBar';
 import { GeometricPattern } from '@/components/brand/GeometricPattern';
 import { Logo } from '@/components/brand/Logo';
 
@@ -29,9 +31,11 @@ export default async function BusinessPage({ params }: { params: { businessId: s
     .order('created_at', { ascending: false });
 
   const name = business.business_name || 'העסק';
+  const { data: { user } } = await (await createClient()).auth.getUser();
 
   return (
     <div className="min-h-screen bg-surface">
+      <ClientBar user={user} next={`/b/${params.businessId}`} />
       <header className="relative overflow-hidden bg-brand-ink text-white">
         <GeometricPattern className="absolute inset-y-0 left-0 h-full w-32 sm:w-48" />
         <div className="relative mx-auto flex max-w-2xl items-center gap-4 px-4 py-10 sm:py-14">

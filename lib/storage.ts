@@ -92,3 +92,23 @@ export async function getSignedUrl(ref: string, download?: string): Promise<stri
     .createSignedUrl(rest.join('/'), 60 * 60, download ? { download } : undefined);
   return data?.signedUrl ?? null;
 }
+
+/**
+ * Serves a stored PDF from our own domain instead of redirecting to Supabase storage
+ * (some filtered networks block storage downloads). Caller must have verified access.
+ */
+export async function pdfResponse(ref: string, fileName: string): Promise<Response> {
+  const [bucket, ...rest] = ref.split('/');
+  if (bucket !== 'pdfs' || rest.length === 0) return new Response('Not found', { status: 404 });
+
+  const { data, error } = await createServiceClient().storage.from('pdfs').download(rest.join('/'));
+  if (error || !data) return new Response('Not found', { status: 404 });
+
+  return new Response(data, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${fileName}"`,
+      'Cache-Control': 'private, no-store',
+    },
+  });
+}

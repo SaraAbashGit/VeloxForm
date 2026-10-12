@@ -11,13 +11,15 @@ interface FormRendererProps {
   fields: FormField[];
   onSubmit: (data: Record<string, unknown>) => void;
   isSubmitting?: boolean;
+  /** Values that override field defaults, e.g. a signed-in customer's name and email */
+  initialValues?: Record<string, string>;
 }
 
-export function FormRenderer({ fields, onSubmit, isSubmitting }: FormRendererProps) {
+export function FormRenderer({ fields, onSubmit, isSubmitting, initialValues }: FormRendererProps) {
   const schema = buildDynamicFormSchema(fields);
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: Object.fromEntries(fields.map((f) => [f.id, ''])),
+    defaultValues: Object.fromEntries(fields.map((f) => [f.id, initialValues?.[f.id] ?? f.default_value ?? ''])),
   });
 
   return (

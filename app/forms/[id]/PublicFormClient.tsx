@@ -6,15 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { submitForm } from './actions';
 import type { Form, FormField } from '@/types/form';
 import { toast } from 'sonner';
-import { Check } from 'lucide-react';
+import Link from 'next/link';
+import { Check, FolderOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { GeometricPattern } from '@/components/brand/GeometricPattern';
 
 interface PublicFormClientProps {
   form: Form;
   fields: FormField[];
+  prefill?: Record<string, string>;
+  isClient?: boolean;
 }
 
-export function PublicFormClient({ form, fields }: PublicFormClientProps) {
+export function PublicFormClient({ form, fields, prefill, isClient }: PublicFormClientProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, startSubmit] = useTransition();
 
@@ -42,6 +46,27 @@ export function PublicFormClient({ form, fields }: PublicFormClientProps) {
           </span>
           <h2 className="text-2xl font-bold font-display mb-2">תודה! הטופס נשלח בהצלחה</h2>
           <p className="text-muted-foreground">{form.title} · {new Date().toLocaleDateString('he-IL')}</p>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            {isClient ? (
+              <Button asChild>
+                <Link href="/my">
+                  <FolderOpen className="h-4 w-4" />
+                  למסמכים שלי
+                </Link>
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                בפעם הבאה{' '}
+                <Link href={`/client/register?next=/forms/${form.slug}`} className="font-semibold text-brand-cyan-700 hover:underline">
+                  הירשמו
+                </Link>{' '}
+                כדי לשמור את כל המסמכים שלכם במקום אחד
+              </p>
+            )}
+            <Link href={`/b/${form.user_id}`} className="text-sm text-brand-cyan-700 hover:underline">
+              לכל הטפסים של העסק
+            </Link>
+          </div>
         </CardContent>
       </Card>
     );
@@ -57,7 +82,7 @@ export function PublicFormClient({ form, fields }: PublicFormClientProps) {
         {form.description && <CardDescription className="text-white/80">{form.description}</CardDescription>}
       </CardHeader>
       <CardContent className="pt-6">
-        <FormRenderer fields={fields} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <FormRenderer fields={fields} onSubmit={handleSubmit} isSubmitting={isSubmitting} initialValues={prefill} />
       </CardContent>
     </Card>
   );
