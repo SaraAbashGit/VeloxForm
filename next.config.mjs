@@ -7,7 +7,7 @@ const nextConfig = {
     // Signatures are sent as PNG data URLs; files go straight to storage and do not count here
     serverActions: { bodySizeLimit: '2mb' },
     // The PDF font files are read from disk at runtime, so ship them with every server function
-    outputFileTracingIncludes: { '/**': ['./lib/pdf/fonts/**'] },
+    outputFileTracingIncludes: { '/**': ['./lib/pdf/fonts/**'], '/**/*': ['./lib/pdf/fonts/**'] },
   },
   // Basic security headers on every page
   async headers() {
