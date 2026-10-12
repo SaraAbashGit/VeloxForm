@@ -52,7 +52,7 @@ interface SubmissionDocumentProps {
 // on the wrong side. Moving it to the front of the string makes it render at the visual end.
 // (Unicode direction marks can't be used: Alef draws them as visible glyphs.)
 function rtlPunct(text: string) {
-  const m = text.match(/^(.*?)([?!:.]+)$/s);
+  const m = text.match(/^([sS]*?)([?!:.]+)$/);
   return m && /[֐-׿]/.test(m[1]) ? m[2] + m[1] : text;
 }
 
