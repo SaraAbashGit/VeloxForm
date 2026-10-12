@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { APP_URL } from '@/lib/app-url';
 import { submitterNames } from '@/lib/submitters';
+import { AiInsights } from '@/components/dashboard/AiInsights';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Inbox, ExternalLink } from 'lucide-react';
+
+// AI insights run as a server action of this page and can take 20+ seconds
+export const maxDuration = 60;
 
 export default async function SubmissionsPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
@@ -41,6 +45,8 @@ export default async function SubmissionsPage({ params }: { params: { id: string
           <Link href={`/forms/${form.id}/edit`}>חזרה לעריכה</Link>
         </Button>
       </div>
+
+      <AiInsights formId={form.id} submissionCount={submissions?.length ?? 0} />
 
       <Card>
         <CardHeader>
