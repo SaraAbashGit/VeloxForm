@@ -7,6 +7,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { CopyLinkButton } from '@/components/dashboard/CopyLinkButton';
+import { submitterNames } from '@/lib/submitters';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
 
   const formIds = forms?.map((f) => f.id) ?? [];
   let submissionCount = 0;
-  let recentSubmissions: { id: string; submitted_at: string; form_id: string; forms: { title: string } | null }[] = [];
+  let recentSubmissions: { id: string; submitted_at: string; form_id: string; client_id: string | null; snapshot_json: unknown; forms: { title: string } | null }[] = [];
 
   if (formIds.length > 0) {
     const { count } = await supabase
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
 
     const { data } = await supabase
       .from('submissions')
-      .select('id, submitted_at, form_id, forms(title)')
+      .select('id, submitted_at, form_id, client_id, snapshot_json, forms(title)')
       .in('form_id', formIds)
       .order('submitted_at', { ascending: false })
       .limit(5);
@@ -115,7 +116,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <RecentActivity submissions={recentSubmissions} />
+        <RecentActivity submissions={recentSubmissions} names={await submitterNames(recentSubmissions)} />
       </div>
     </div>
   );
