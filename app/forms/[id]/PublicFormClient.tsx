@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Check, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GeometricPattern } from '@/components/brand/GeometricPattern';
+import { ExplainFormButton } from '@/components/forms/ExplainFormButton';
 
 interface PublicFormClientProps {
   form: Form;
@@ -87,6 +88,9 @@ export function PublicFormClient({ form, fields, prefill, isClient }: PublicForm
         {form.description && <CardDescription className="text-white/80">{form.description}</CardDescription>}
       </CardHeader>
       <CardContent className="pt-6">
+        <div className="mb-6">
+          <ExplainFormButton slug={form.slug} />
+        </div>
         <FormRenderer fields={fields} onSubmit={handleSubmit} isSubmitting={isSubmitting} initialValues={prefill} />
       </CardContent>
     </Card>
