@@ -4,6 +4,8 @@ import { ChevronLeft, FileText } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { ClientBar } from '@/components/client/ClientBar';
+import { ClientShell } from '@/components/client/ClientShell';
+import { isClientUser } from '@/lib/auth/roles';
 import { linkClientToBusiness } from '@/lib/auth/client-businesses';
 import { GeometricPattern } from '@/components/brand/GeometricPattern';
 import { Logo } from '@/components/brand/Logo';
@@ -35,9 +37,9 @@ export default async function BusinessPage({ params }: { params: { businessId: s
   const { data: { user } } = await (await createClient()).auth.getUser();
   await linkClientToBusiness(user, params.businessId);
 
-  return (
+  const page = (
     <div className="min-h-screen bg-surface">
-      <ClientBar user={user} next={`/b/${params.businessId}`} />
+      {!(isClientUser(user)) && <ClientBar user={user} next={`/b/${params.businessId}`} />}
       <header className="relative overflow-hidden bg-brand-ink text-white">
         <GeometricPattern className="absolute inset-y-0 left-0 h-full w-32 sm:w-48" />
         <div className="relative mx-auto flex max-w-2xl items-center gap-4 px-4 py-10 sm:py-14">
@@ -87,5 +89,14 @@ export default async function BusinessPage({ params }: { params: { businessId: s
         <Logo size="sm" />
       </footer>
     </div>
+  );
+
+  // A signed-in customer keeps their side menu; everyone else gets the plain public page
+  return isClientUser(user) && user ? (
+    <ClientShell user={user} active={params.businessId}>
+      {page}
+    </ClientShell>
+  ) : (
+    page
   );
 }
