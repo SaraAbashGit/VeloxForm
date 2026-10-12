@@ -1,5 +1,6 @@
 'use server';
 
+import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { isClientUser } from '@/lib/auth/roles';
@@ -16,6 +17,9 @@ export type SubmitResult = { ok: true; submissionId: string } | { ok: false; err
 
 // Returns a result instead of throwing: Next.js hides thrown messages from the browser in production
 export async function submitForm(slug: string, rawData: Record<string, unknown>): Promise<SubmitResult> {
+  const { limit, windowMs } = LIMITS.submitForm;
+  if (isRateLimited('submitForm', limit, windowMs)) return { ok: false, error: RATE_LIMIT_MESSAGE };
+
   let createdSubmissionId: string | null = null;
   try {
     return await saveSubmission(slug, rawData, (id) => (createdSubmissionId = id));

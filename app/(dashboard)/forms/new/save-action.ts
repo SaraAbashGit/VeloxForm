@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { isClientUser } from '@/lib/auth/roles';
 import { nanoid } from 'nanoid';
 import { redirect } from 'next/navigation';
 import type { AIFormSchema } from '@/types/form';
@@ -8,7 +9,8 @@ import type { AIFormSchema } from '@/types/form';
 export async function saveGeneratedForm(schema: AIFormSchema) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
+  // Customers have accounts too, but only business owners may create forms
+  if (!user || isClientUser(user)) throw new Error('Unauthorized');
 
   const slug = nanoid(10);
 
