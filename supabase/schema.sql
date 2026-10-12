@@ -119,3 +119,6 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 -- signatures: public read, authenticated write
 -- uploads: public read, anon insert
 -- pdfs: public read, service role write
+
+-- 2026-10-12: answers are read against submissions.snapshot_json, so they must not block editing or deleting form fields
+ALTER TABLE public.submission_answers DROP CONSTRAINT IF EXISTS submission_answers_field_id_fkey;
