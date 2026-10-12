@@ -17,11 +17,16 @@ export function RecentActivity({ submissions, names = {} }: RecentActivityProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <span className="rounded-full bg-brand-600 p-1.5 text-white">
-            <Clock className="h-4 w-4" />
+        <CardTitle className="flex items-center justify-between text-lg">
+          <span className="flex items-center gap-2">
+            <span className="rounded-full bg-brand-600 p-1.5 text-white">
+              <Clock className="h-4 w-4" />
+            </span>
+            פעילות אחרונה
           </span>
-          פעילות אחרונה
+          <Link href="/submissions" className="text-sm font-medium text-brand-cyan-700 hover:underline">
+            לכל ההגשות
+          </Link>
         </CardTitle>
       </CardHeader>
       <CardContent>
