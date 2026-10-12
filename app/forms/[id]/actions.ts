@@ -123,19 +123,23 @@ async function saveSubmission(
     pdfAnswers.push({ ...(answer as SubmissionAnswer), answer_value: pdfValue });
   }
 
+  const { data: owner } = await supabase
+    .from('users')
+    .select('email, business_name')
+    .eq('id', form.user_id)
+    .single();
+
   try {
-    // pdf_url holds the private storage reference; the dashboard signs it on demand
-    const pdfRef = await generateSubmissionPdf(snapshot, pdfAnswers, submission.id);
+    // pdf_url holds the private storage reference; the dashboard serves it after an ownership check
+    const pdfRef = await generateSubmissionPdf(snapshot, pdfAnswers, submission.id, {
+      businessName: owner?.business_name,
+      submittedAt: submission.submitted_at,
+    });
     await supabase.from('submissions').update({ pdf_url: pdfRef }).eq('id', submission.id);
   } catch (error) {
     console.error('PDF generation failed:', error); // best-effort: the submission itself is saved
   }
 
-  const { data: owner } = await supabase
-    .from('users')
-    .select('email')
-    .eq('id', form.user_id)
-    .single();
 
   if (owner?.email) {
     try {

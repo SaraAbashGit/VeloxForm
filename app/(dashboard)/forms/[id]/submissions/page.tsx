@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { APP_URL } from '@/lib/app-url';
 import { submitterNames } from '@/lib/submitters';
 import { AiInsights } from '@/components/dashboard/AiInsights';
+import { RegeneratePdfButton } from '@/components/dashboard/RegeneratePdfButton';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,13 +90,15 @@ export default async function SubmissionsPage({ params }: { params: { id: string
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/forms/${params.id}/submissions/${sub.id}`}>צפייה</Link>
                       </Button>
-                      {sub.pdf_url && (
+                      {sub.pdf_url ? (
                         <Button variant="ghost" size="sm" asChild>
                           <a href={`/forms/${params.id}/submissions/${sub.id}/pdf`} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" />
                             PDF
                           </a>
                         </Button>
+                      ) : (
+                        <RegeneratePdfButton formId={params.id} submissionId={sub.id} />
                       )}
                     </TableCell>
                   </TableRow>
