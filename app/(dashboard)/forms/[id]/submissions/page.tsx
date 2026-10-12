@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { APP_URL } from '@/lib/app-url';
+import { submitterNames } from '@/lib/submitters';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,9 +24,11 @@ export default async function SubmissionsPage({ params }: { params: { id: string
 
   const { data: submissions } = await supabase
     .from('submissions')
-    .select('id, submitted_at, pdf_url')
+    .select('id, submitted_at, pdf_url, client_id, snapshot_json')
     .eq('form_id', params.id)
     .order('submitted_at', { ascending: false });
+
+  const names = await submitterNames(submissions ?? []);
 
   return (
     <div className="space-y-6">
@@ -51,6 +54,7 @@ export default async function SubmissionsPage({ params }: { params: { id: string
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>ממלא/ת</TableHead>
                   <TableHead>תאריך</TableHead>
                   <TableHead>PDF</TableHead>
                   <TableHead>פעולות</TableHead>
@@ -59,6 +63,12 @@ export default async function SubmissionsPage({ params }: { params: { id: string
               <TableBody>
                 {submissions.map((sub) => (
                   <TableRow key={sub.id}>
+                    <TableCell className="font-medium text-brand-teal">
+                      {names[sub.id] ?? 'ללא שם'}
+                      {sub.client_id && (
+                        <span className="ms-2 rounded-full bg-brand-cyan-50 px-2 py-0.5 text-xs text-brand-cyan-700">לקוח רשום</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {new Date(sub.submitted_at).toLocaleString('he-IL')}
                     </TableCell>
