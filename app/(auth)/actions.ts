@@ -1,5 +1,6 @@
 'use server';
 
+import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { APP_URL } from '@/lib/app-url';
@@ -18,6 +19,9 @@ function translateError(message: string) {
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const { limit, windowMs } = LIMITS.signUp;
+  if (isRateLimited('signUp', limit, windowMs)) return { error: RATE_LIMIT_MESSAGE };
+
   const supabase = await createClient();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -37,6 +41,9 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 }
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const { limit, windowMs } = LIMITS.signIn;
+  if (isRateLimited('signIn', limit, windowMs)) return { error: RATE_LIMIT_MESSAGE };
+
   const supabase = await createClient();
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -53,6 +60,9 @@ export async function signOut() {
 }
 
 export async function resetPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const { limit, windowMs } = LIMITS.signUp;
+  if (isRateLimited('resetPassword', limit, windowMs)) return { error: RATE_LIMIT_MESSAGE };
+
   const supabase = await createClient();
   const email = formData.get('email') as string;
 

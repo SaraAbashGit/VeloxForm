@@ -1,5 +1,6 @@
 'use server';
 
+import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { z } from 'zod';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { askAiJson } from '@/lib/ai';
@@ -23,6 +24,9 @@ Return ONLY JSON: {"points": ["...", "..."]} with 3 to 5 short points, each one 
 
 /** "על מה אני חותם?" — a plain-language summary of a public form, for the customer filling it */
 export async function explainForm(slug: string): Promise<ExplainResult> {
+  const { limit, windowMs } = LIMITS.explainForm;
+  if (isRateLimited('explainForm', limit, windowMs)) return { ok: false, error: RATE_LIMIT_MESSAGE };
+
   const { data: form } = await createServiceClient()
     .from('forms')
     .select('title, description, form_fields(type, label, required, options, field_order)')

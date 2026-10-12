@@ -1,5 +1,6 @@
 'use server';
 
+import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/admin';
@@ -36,6 +37,9 @@ Give 3 to 5 insights and 2 to 3 recommendations.`;
 
 /** AI Analytics (spec "AI Analytics Future Plan"): themes and trends across a form's submissions */
 export async function analyzeSubmissions(formId: string): Promise<InsightsResult> {
+  const { limit, windowMs } = LIMITS.analyzeSubmissions;
+  if (isRateLimited('analyzeSubmissions', limit, windowMs)) return { ok: false, error: RATE_LIMIT_MESSAGE };
+
   const { data: { user } } = await (await createClient()).auth.getUser();
   if (!user) return { ok: false, error: 'יש להתחבר' };
 

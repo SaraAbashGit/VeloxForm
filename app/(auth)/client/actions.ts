@@ -1,5 +1,6 @@
 'use server';
 
+import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
@@ -17,6 +18,9 @@ const registerSchema = z.object({
 // Customers skip email verification: Supabase's free mailer allows only a few emails per hour,
 // which would block customers mid-form. Business owners still verify their email.
 export async function clientSignUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const { limit, windowMs } = LIMITS.signUp;
+  if (isRateLimited('clientSignUp', limit, windowMs)) return { error: RATE_LIMIT_MESSAGE };
+
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { full_name, email, password } = parsed.data;
@@ -46,6 +50,9 @@ export async function clientSignUp(_prev: AuthState, formData: FormData): Promis
 }
 
 export async function clientSignIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const { limit, windowMs } = LIMITS.signIn;
+  if (isRateLimited('clientSignIn', limit, windowMs)) return { error: RATE_LIMIT_MESSAGE };
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email: String(formData.get('email') ?? ''),
