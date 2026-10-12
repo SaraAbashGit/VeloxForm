@@ -30,7 +30,10 @@ export default async function SubmissionDetailPage({
           <CardTitle>ההגשה לא נמצאה בחשבון הזה</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-muted-foreground">
-          <p>ייתכן שההגשה שייכת לחשבון עסק אחר. אם את מחוברת כרגע לחשבון אחר (למשל חשבון הדמו), התנתקי והתחברי לחשבון של העסק שקיבל את ההגשה.</p>
+          <p>
+            את מחוברת כרגע בתור <b className="text-brand-teal" dir="ltr">{user?.email}</b>, וההגשה הזו שייכת לחשבון עסק אחר.
+          </p>
+          <p>כדי לראות אותה: בתפריט הצד לחצי התנתק, והתחברי עם החשבון של העסק שקיבל את ההגשה.</p>
           <Button asChild variant="outline">
             <Link href="/dashboard">ללוח הבקרה</Link>
           </Button>
