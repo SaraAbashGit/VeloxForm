@@ -4,6 +4,7 @@ import { PublicFormClient } from './PublicFormClient';
 import { Logo } from '@/components/brand/Logo';
 import { ClientBar } from '@/components/client/ClientBar';
 import { clientName, isClientUser } from '@/lib/auth/roles';
+import { linkClientToBusiness } from '@/lib/auth/client-businesses';
 import type { Form, FormField } from '@/types/form';
 
 // Submitting renders the PDF and sends email, which can exceed Vercel's default function timeout
@@ -29,6 +30,7 @@ export default async function PublicFormPage({ params }: { params: { id: string 
 
   const { data: { user } } = await supabase.auth.getUser();
   const isClient = isClientUser(user);
+  await linkClientToBusiness(user, form.user_id);
   const formFields = (fields ?? []) as FormField[];
 
   // A signed-in customer gets their name and email filled in (first matching field of each kind)
