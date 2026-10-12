@@ -9,7 +9,34 @@ import { APP_URL } from '@/lib/app-url';
 import { uploadSignature, confirmUpload } from '@/lib/storage';
 import type { Form, FormField, SubmissionAnswer } from '@/types/form';
 
-export async function submitForm(slug: string, rawData: Record<string, unknown>) {
+// A failure the customer can understand; anything else is reported as a generic error
+class SubmitError extends Error {}
+
+export type SubmitResult = { ok: true; submissionId: string } | { ok: false; error: string };
+
+// Returns a result instead of throwing: Next.js hides thrown messages from the browser in production
+export async function submitForm(slug: string, rawData: Record<string, unknown>): Promise<SubmitResult> {
+  let createdSubmissionId: string | null = null;
+  try {
+    return await saveSubmission(slug, rawData, (id) => (createdSubmissionId = id));
+  } catch (error) {
+    console.error('Form submission failed:', error);
+    // Don't leave a half-saved submission behind (answers are removed by ON DELETE CASCADE)
+    if (createdSubmissionId) {
+      await createServiceClient().from('submissions').delete().eq('id', createdSubmissionId);
+    }
+    return {
+      ok: false,
+      error: error instanceof SubmitError ? error.message : 'שגיאה בשליחת הטופס. נסו שוב בעוד רגע',
+    };
+  }
+}
+
+async function saveSubmission(
+  slug: string,
+  rawData: Record<string, unknown>,
+  onCreated: (submissionId: string) => void
+): Promise<SubmitResult> {
   const supabase = createServiceClient();
 
   const { data: form, error: formError } = await supabase
@@ -19,7 +46,7 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
     .eq('is_active', true)
     .single();
 
-  if (formError || !form) throw new Error('Form not found');
+  if (formError || !form) throw new SubmitError('הטופס לא נמצא או שאינו פעיל יותר');
 
   const fields = (form.form_fields as FormField[]).sort((a, b) => a.field_order - b.field_order);
 
@@ -28,9 +55,9 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
   for (const field of fields) {
     const raw = rawData[field.id];
     const isEmpty = raw === undefined || raw === null || raw === '' || raw === false || (Array.isArray(raw) && raw.length === 0);
-    if (field.required && isEmpty) throw new Error(`Missing required field: ${field.label}`);
+    if (field.required && isEmpty) throw new SubmitError(`חסר שדה חובה: ${field.label}`);
     if (typeof raw === 'string' && field.type !== 'signature' && raw.length > MAX_TEXT) {
-      throw new Error(`Field too long: ${field.label}`);
+      throw new SubmitError(`התשובה ארוכה מדי בשדה: ${field.label}`);
     }
   }
   const snapshot: Form = {
@@ -55,6 +82,7 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
     .single();
 
   if (subError || !submission) throw new Error(subError?.message ?? 'Submission failed');
+  onCreated(submission.id);
 
   const answers: SubmissionAnswer[] = [];
   // The PDF embeds the signature image itself, so it gets the original data URL rather than the storage path
@@ -65,9 +93,15 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
     let pdfValue = value;
 
     if (field.type === 'signature' && value.startsWith('data:image')) {
-      value = await uploadSignature(value, submission.id, field.id);
+      value = await uploadSignature(value, submission.id, field.id).catch((error) => {
+        console.error('Signature upload failed:', error);
+        throw new SubmitError('שמירת החתימה נכשלה. נסו שוב');
+      });
     } else if (field.type === 'file_upload' && value) {
-      value = await confirmUpload(value);
+      value = await confirmUpload(value).catch((error) => {
+        console.error('File confirmation failed:', error);
+        throw new SubmitError(`הקובץ בשדה "${field.label}" לא הועלה. נסו להעלות אותו שוב`);
+      });
       pdfValue = value;
     } else if (field.type === 'checkbox' && Array.isArray(rawData[field.id])) {
       value = (rawData[field.id] as string[]).join(', ');
@@ -117,5 +151,5 @@ export async function submitForm(slug: string, rawData: Record<string, unknown>)
     }
   }
 
-  return { success: true, submissionId: submission.id };
+  return { ok: true, submissionId: submission.id };
 }

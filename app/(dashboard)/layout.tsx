@@ -5,7 +5,8 @@ import { Logo } from '@/components/brand/Logo';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      <div className="hidden md:block">
+      {/* The wrapper itself must be sticky: a sticky child only sticks within its parent's height */}
+      <div className="hidden md:block md:sticky md:top-0 md:h-screen md:shrink-0">
         <Sidebar />
       </div>
       <div className="flex-1 min-w-0">

@@ -25,11 +25,16 @@ export function PublicFormClient({ form, fields, prefill, isClient }: PublicForm
   const handleSubmit = (data: Record<string, unknown>) => {
     startSubmit(async () => {
       try {
-        await submitForm(form.slug, data);
+        const result = await submitForm(form.slug, data);
+        if (!result.ok) {
+          toast.error(result.error, { duration: 8000 });
+          return;
+        }
         setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         toast.success('הטופס נשלח בהצלחה!');
       } catch {
-        toast.error('שגיאה בשליחת הטופס');
+        toast.error('אין חיבור לשרת. בדקו את האינטרנט ונסו שוב');
       }
     });
   };
