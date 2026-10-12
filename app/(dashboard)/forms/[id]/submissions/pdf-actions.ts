@@ -24,7 +24,9 @@ export async function regeneratePdf(formId: string, submissionId: string): Promi
     await regenerateSubmissionPdf(submissionId);
   } catch (error) {
     console.error('PDF regeneration failed:', error);
-    return { ok: false, error: 'יצירת ה-PDF נכשלה. נסו שוב' };
+    // The caller owns this submission, so the technical reason is safe to show and helps diagnose it
+    const reason = error instanceof Error ? error.message.slice(0, 150) : '';
+    return { ok: false, error: `יצירת ה-PDF נכשלה${reason ? `: ${reason}` : ''}` };
   }
   revalidatePath(`/forms/${formId}/submissions`);
   return { ok: true };

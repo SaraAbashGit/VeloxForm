@@ -1,16 +1,22 @@
 import React from 'react';
+import fs from 'fs';
 import path from 'path';
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import type { Form, SubmissionAnswer } from '@/types/form';
 
-// Bundled with the app (see outputFileTracingIncludes in next.config): a remote font made PDF generation fail
-// whenever the CDN was slow or blocked. Alef covers Hebrew AND Latin/digits (emails, phones, dates).
+// Alef covers Hebrew AND Latin/digits (emails, phones, dates). The files ship with the app (outputFileTracingIncludes
+// in next.config); if a deployment is missing them, the same files load from the CDN instead of failing the PDF.
 const FONT_DIR = path.join(process.cwd(), 'lib/pdf/fonts');
+const FONT_CDN = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/alef/';
+const fontSrc = (file: string) => {
+  const local = path.join(FONT_DIR, file);
+  return fs.existsSync(local) ? local : FONT_CDN + file;
+};
 Font.register({
   family: 'Alef',
   fonts: [
-    { src: path.join(FONT_DIR, 'Alef-Regular.ttf') },
-    { src: path.join(FONT_DIR, 'Alef-Bold.ttf'), fontWeight: 'bold' },
+    { src: fontSrc('Alef-Regular.ttf') },
+    { src: fontSrc('Alef-Bold.ttf'), fontWeight: 'bold' },
   ],
 });
 // Hebrew words must not be split with hyphens

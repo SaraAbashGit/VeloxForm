@@ -22,7 +22,22 @@ export default async function SubmissionDetailPage({
     .eq('user_id', user?.id)
     .single();
 
-  if (!form) notFound();
+  // Usually a link from a notification email opened while signed in to a different business account
+  if (!form) {
+    return (
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>ההגשה לא נמצאה בחשבון הזה</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-muted-foreground">
+          <p>ייתכן שההגשה שייכת לחשבון עסק אחר. אם את מחוברת כרגע לחשבון אחר (למשל חשבון הדמו), התנתקי והתחברי לחשבון של העסק שקיבל את ההגשה.</p>
+          <Button asChild variant="outline">
+            <Link href="/dashboard">ללוח הבקרה</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const { data: submission } = await supabase
     .from('submissions')
