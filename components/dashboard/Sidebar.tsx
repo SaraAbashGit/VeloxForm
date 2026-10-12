@@ -27,7 +27,7 @@ export function Sidebar() {
   const active = activeHref(usePathname());
 
   return (
-    <aside className="w-64 bg-brand-600 h-screen p-4 flex flex-col sticky top-0">
+    <aside className="w-64 bg-brand-600 h-screen p-4 flex flex-col overflow-y-auto">
       <div className="mb-8 px-1">
         <Link href="/dashboard">
           <Logo tone="light" />
