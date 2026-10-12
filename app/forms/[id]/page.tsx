@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { PublicFormClient } from './PublicFormClient';
 import { Logo } from '@/components/brand/Logo';
 import { ClientBar } from '@/components/client/ClientBar';
+import { ClientShell } from '@/components/client/ClientShell';
 import { clientName, isClientUser } from '@/lib/auth/roles';
 import { linkClientToBusiness } from '@/lib/auth/client-businesses';
 import type { Form, FormField } from '@/types/form';
@@ -42,9 +43,9 @@ export default async function PublicFormPage({ params }: { params: { id: string 
     if (nameField) prefill[nameField.id] = clientName(user);
   }
 
-  return (
+  const page = (
     <div className="min-h-screen bg-surface">
-      <ClientBar user={user} next={`/forms/${params.id}`} />
+      {!(isClient) && <ClientBar user={user} next={`/forms/${params.id}`} />}
       <div className="py-8 px-4">
         <PublicFormClient form={form as Form} fields={formFields} prefill={prefill} isClient={isClient} />
       </div>
@@ -53,5 +54,14 @@ export default async function PublicFormPage({ params }: { params: { id: string 
         <Logo size="sm" />
       </footer>
     </div>
+  );
+
+  // A signed-in customer keeps their side menu; everyone else gets the plain public page
+  return isClient && user ? (
+    <ClientShell user={user} active={form.user_id}>
+      {page}
+    </ClientShell>
+  ) : (
+    page
   );
 }
