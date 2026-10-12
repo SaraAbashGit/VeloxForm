@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { safeNext } from '@/lib/auth/roles';
+import { businessIdFromPath, linkClientToBusiness } from '@/lib/auth/client-businesses';
 import type { AuthState } from '../actions';
 
 const registerSchema = z.object({
@@ -35,21 +36,26 @@ export async function clientSignUp(_prev: AuthState, formData: FormData): Promis
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: 'החשבון נוצר, אבל ההתחברות נכשלה. נסי להתחבר' };
 
-  redirect(safeNext(formData.get('next'), '/my'));
+  // Signing up from a business link connects the customer to that business
+  const next = safeNext(formData.get('next'), '/my');
+  await linkClientToBusiness(data.user, await businessIdFromPath(next));
+  redirect(next);
 }
 
 export async function clientSignIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: String(formData.get('email') ?? ''),
     password: String(formData.get('password') ?? ''),
   });
   if (error) return { error: 'אימייל או סיסמה שגויים' };
 
-  redirect(safeNext(formData.get('next'), '/my'));
+  const next = safeNext(formData.get('next'), '/my');
+  await linkClientToBusiness(data.user, await businessIdFromPath(next));
+  redirect(next);
 }
 
 export async function clientSignOut(formData: FormData) {

@@ -4,6 +4,7 @@ import { ChevronLeft, FileText } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { ClientBar } from '@/components/client/ClientBar';
+import { linkClientToBusiness } from '@/lib/auth/client-businesses';
 import { GeometricPattern } from '@/components/brand/GeometricPattern';
 import { Logo } from '@/components/brand/Logo';
 
@@ -32,6 +33,7 @@ export default async function BusinessPage({ params }: { params: { businessId: s
 
   const name = business.business_name || 'העסק';
   const { data: { user } } = await (await createClient()).auth.getUser();
+  await linkClientToBusiness(user, params.businessId);
 
   return (
     <div className="min-h-screen bg-surface">
