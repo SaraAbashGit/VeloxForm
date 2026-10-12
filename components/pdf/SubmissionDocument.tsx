@@ -48,6 +48,14 @@ interface SubmissionDocumentProps {
   submittedAt?: string;
 }
 
+// The PDF engine orders each Hebrew line left-to-right, which puts trailing punctuation ("?", ":", "!")
+// on the wrong side. Moving it to the front of the string makes it render at the visual end.
+// (Unicode direction marks can't be used: Alef draws them as visible glyphs.)
+function rtlPunct(text: string) {
+  const m = text.match(/^(.*?)([?!:.]+)$/s);
+  return m && /[֐-׿]/.test(m[1]) ? m[2] + m[1] : text;
+}
+
 function fileName(value: string) {
   try {
     return (JSON.parse(value) as { name?: string }).name ?? 'קובץ מצורף';
@@ -56,7 +64,7 @@ function fileName(value: string) {
   }
 }
 
-export function SubmissionDocument({ form, answers, businessName, submissionId, submittedAt }: SubmissionDocumentProps) {
+export function SubmissionDocument({ form, answers, businessName, submittedAt }: SubmissionDocumentProps) {
   const answerMap = Object.fromEntries(answers.map((a) => [a.field_id, a.answer_value ?? '']));
   const fields = form.form_fields ?? [];
   const signatures = fields.filter((f) => f.type === 'signature' && (answerMap[f.id] ?? '').startsWith('data:image'));
@@ -76,18 +84,11 @@ export function SubmissionDocument({ form, answers, businessName, submissionId, 
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.title}>{form.title}</Text>
-          {form.description ? <Text style={styles.description}>{form.description}</Text> : null}
+          <Text style={styles.title}>{rtlPunct(form.title)}</Text>
+          {form.description ? <Text style={styles.description}>{rtlPunct(form.description)}</Text> : null}
 
           <View style={styles.meta}>
             <Text style={styles.metaText}>תאריך ושעת שליחה: {when}</Text>
-            {submissionId ? (
-              // Hebrew label and Latin id in separate Text nodes, otherwise the PDF engine mixes their order
-              <View style={{ flexDirection: 'row-reverse' }}>
-                <Text style={styles.metaText}>מספר הגשה </Text>
-                <Text style={styles.metaText}>{submissionId.slice(0, 8)}</Text>
-              </View>
-            ) : null}
           </View>
 
           {fields
@@ -96,7 +97,7 @@ export function SubmissionDocument({ form, answers, businessName, submissionId, 
               const value = answerMap[field.id] ?? '';
               return (
                 <View key={field.id} style={styles.row} wrap={false}>
-                  <Text style={styles.label}>{field.label}</Text>
+                  <Text style={styles.label}>{rtlPunct(field.label)}</Text>
                   <Text style={styles.value}>{field.type === 'file_upload' ? (value ? fileName(value) : '—') : value || '—'}</Text>
                 </View>
               );
@@ -104,7 +105,7 @@ export function SubmissionDocument({ form, answers, businessName, submissionId, 
 
           {signatures.map((field) => (
             <View key={field.id} style={styles.signatureBox} wrap={false}>
-              <Text style={styles.signatureLabel}>{field.label}</Text>
+              <Text style={styles.signatureLabel}>{rtlPunct(field.label)}</Text>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt prop */}
               <Image src={answerMap[field.id]} style={styles.signature} />
               <View style={styles.signatureLine} />
