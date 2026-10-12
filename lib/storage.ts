@@ -102,7 +102,15 @@ export async function pdfResponse(ref: string, fileName: string): Promise<Respon
   if (bucket !== 'pdfs' || rest.length === 0) return new Response('Not found', { status: 404 });
 
   const { data, error } = await createServiceClient().storage.from('pdfs').download(rest.join('/'));
-  if (error || !data) return new Response('Not found', { status: 404 });
+  if (error || !data) {
+    console.error('PDF download failed:', error?.message);
+    // Plain Hebrew page instead of a bare "Not found" (e.g. when a filtered network blocks storage)
+    return new Response(
+      '<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><body style="font-family:sans-serif;padding:40px;text-align:center">' +
+        '<h2>לא ניתן להוריד את הקובץ כרגע</h2><p>ייתכן שהרשת שלך חוסמת הורדת קבצים. נסו שוב מאוחר יותר או מרשת אחרת.</p></body></html>',
+      { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
 
   return new Response(data, {
     headers: {

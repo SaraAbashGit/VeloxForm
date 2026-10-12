@@ -27,6 +27,9 @@ export default function LoginPage() {
           <div className="mt-4 text-center text-sm space-y-2">
             <Link href="/register" className="text-brand-500 hover:underline block">אין לך חשבון? הירשם</Link>
             <Link href="/reset-password" className="text-muted-foreground hover:underline block">שכחת סיסמה?</Link>
+            <Link href="/client/login" className="text-brand-cyan-700 hover:underline block pt-2 border-t">
+              לקוח/ה של עסק? כניסה ללקוחות
+            </Link>
           </div>
         </CardContent>
       </Card>
