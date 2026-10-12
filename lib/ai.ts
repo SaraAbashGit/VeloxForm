@@ -9,8 +9,20 @@ const openai = new OpenAI({
 });
 
 const MAX_ATTEMPTS = 3;
-// 429 = rate limit, 5xx = provider overloaded/unavailable; both are usually temporary
+// 429 = rate limit / daily quota, 5xx = provider overloaded/unavailable; both are usually temporary
 const isTemporaryError = (status?: number) => status === 429 || (!!status && status >= 500);
+
+// Free tiers have a daily quota per model, so when one model is exhausted or overloaded we move on to the next.
+// OPENAI_FALLBACK_MODELS (comma separated) overrides the defaults; with OpenAI itself there are none by default.
+const PRIMARY_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const FALLBACK_MODELS = (
+  process.env.OPENAI_FALLBACK_MODELS ??
+  (process.env.OPENAI_BASE_URL?.includes('generativelanguage') ? 'gemini-flash-latest,gemini-flash-lite-latest' : '')
+)
+  .split(',')
+  .map((m) => m.trim())
+  .filter((m) => m && m !== PRIMARY_MODEL);
+const MODELS = [PRIMARY_MODEL, ...FALLBACK_MODELS];
 
 export type AiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -24,10 +36,12 @@ export async function askAiJson<T>(
   schema: z.ZodType<T>,
   options: { temperature?: number } = {}
 ): Promise<AiResult<T>> {
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  let modelIndex = 0;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS + FALLBACK_MODELS.length; attempt++) {
+    const model = MODELS[modelIndex];
     try {
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'gpt-4o',
+        model,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: user },
@@ -39,9 +53,16 @@ export async function askAiJson<T>(
       return { ok: true, data: schema.parse(JSON.parse(raw)) };
     } catch (error) {
       const status = (error as { status?: number }).status;
-      console.error(`AI request failed (attempt ${attempt}/${MAX_ATTEMPTS}):`, error);
-      if (isTemporaryError(status) && attempt < MAX_ATTEMPTS) {
-        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+      console.error(`AI request failed (model ${model}, attempt ${attempt}):`, error);
+      const hasNextModel = modelIndex < MODELS.length - 1;
+      // Quota / overload / bad answer on this model: switch to the next one right away
+      if (hasNextModel) {
+        modelIndex++;
+        continue;
+      }
+      // Last model and a temporary error: wait a little and try it again
+      if (isTemporaryError(status) && attempt < MAX_ATTEMPTS + FALLBACK_MODELS.length) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         continue;
       }
       return {
