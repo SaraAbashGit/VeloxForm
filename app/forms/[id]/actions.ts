@@ -1,6 +1,7 @@
 'use server';
 
 import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
+import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { isClientUser } from '@/lib/auth/roles';
@@ -158,6 +159,12 @@ async function saveSubmission(
       // Email is best-effort
     }
   }
+
+  // The customer's documents and the owner's lists must show the new submission without a manual refresh
+  revalidatePath('/my');
+  revalidatePath('/dashboard');
+  revalidatePath('/submissions');
+  revalidatePath(`/forms/${form.id}/submissions`);
 
   return { ok: true, submissionId: submission.id };
 }

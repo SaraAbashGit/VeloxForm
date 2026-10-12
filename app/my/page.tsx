@@ -103,6 +103,9 @@ export default async function MyDocumentsPage() {
                               <Check className="h-3 w-3" />
                               נשלח {new Date(done.submitted_at).toLocaleDateString('he-IL')}
                             </span>
+                            <Link href={`/my/${done.id}`} className="text-sm font-medium text-brand-cyan-700 hover:underline">
+                              צפייה
+                            </Link>
                             <Link href={`/forms/${form.slug}`} className="text-sm text-muted-foreground hover:underline">
                               מילוי שוב
                             </Link>
@@ -145,6 +148,9 @@ export default async function MyDocumentsPage() {
                         {new Date(row.submitted_at).toLocaleDateString('he-IL')}
                       </p>
                     </div>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/my/${row.id}`}>צפייה</Link>
+                    </Button>
                     {row.pdf_url && (
                       <Button asChild size="sm" variant="outline">
                         <a href={`/my/${row.id}/pdf`} target="_blank" rel="noopener noreferrer">
