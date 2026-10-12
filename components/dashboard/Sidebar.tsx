@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, LayoutDashboard, Plus, User, LogOut } from 'lucide-react';
+import { FileText, LayoutDashboard, Plus, User, LogOut, Inbox, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/app/(auth)/actions';
@@ -11,6 +11,8 @@ import { Logo } from '@/components/brand/Logo';
 const navItems = [
   { href: '/dashboard', label: 'לוח בקרה', icon: LayoutDashboard },
   { href: '/forms', label: 'הטפסים שלי', icon: FileText },
+  { href: '/submissions', label: 'הגשות', icon: Inbox },
+  { href: '/clients', label: 'הלקוחות שלי', icon: Users },
   { href: '/forms/new', label: 'טופס חדש', icon: Plus },
   { href: '/profile', label: 'פרופיל', icon: User },
 ];
@@ -67,13 +69,13 @@ export function Sidebar() {
 export function MobileNav() {
   const active = activeHref(usePathname());
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-600 flex justify-around p-2 z-50">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-600 flex justify-around gap-1 overflow-x-auto p-2 z-50">
       {navItems.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
           className={cn(
-            'flex flex-col items-center gap-1 p-2 text-xs rounded-lg',
+            'flex shrink-0 flex-col items-center gap-1 whitespace-nowrap p-2 text-xs rounded-lg',
             href === active ? 'bg-brand-teal text-brand-cyan' : 'text-brand-100'
           )}
         >
