@@ -6,6 +6,7 @@ import { aiFormSchemaValidator, AI_FIELD_FORMAT } from '@/lib/validations/ai-for
 import { askAiJson } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { isClientUser } from '@/lib/auth/roles';
+import { attachmentError, ATTACHMENT_NOTE, type AiAttachment } from '@/lib/ai-attachment';
 
 type GenerateResult = { ok: true; form: AIFormSchema } | { ok: false; error: string };
 
@@ -14,7 +15,10 @@ Return ONLY a raw, valid JSON object matching the structure below with no markdo
 ${AI_FIELD_FORMAT}
 Crucial Instructions: Always append a "signature" type field automatically at the end of the form if the input implies a declaration, waiver, contract, agreement, or formal signup.`;
 
-export async function generateFormFromPrompt(userPrompt: string): Promise<GenerateResult> {
+export async function generateFormFromPrompt(
+  userPrompt: string,
+  attachment: AiAttachment | null = null
+): Promise<GenerateResult> {
   const { limit, windowMs } = LIMITS.generateForm;
   if (isRateLimited('generateFormFromPrompt', limit, windowMs)) return { ok: false, error: RATE_LIMIT_MESSAGE };
 
@@ -23,9 +27,14 @@ export async function generateFormFromPrompt(userPrompt: string): Promise<Genera
   if (!user || isClientUser(user)) return { ok: false, error: 'יש להתחבר כבעל עסק' };
 
   const prompt = userPrompt.trim().slice(0, 2000);
-  if (!prompt) return { ok: false, error: 'יש להזין תיאור לטופס' };
+  if (!prompt && !attachment) return { ok: false, error: 'יש להזין תיאור לטופס או לצרף תמונה/קובץ' };
+  const badAttachment = attachmentError(attachment);
+  if (badAttachment) return { ok: false, error: badAttachment };
 
-  const result = await askAiJson(SYSTEM_PROMPT, prompt, aiFormSchemaValidator);
+  const request = attachment
+    ? `${prompt || 'Build a form based on the attachment.'}\n\n${ATTACHMENT_NOTE}`
+    : prompt;
+  const result = await askAiJson(SYSTEM_PROMPT, request, aiFormSchemaValidator, { attachment });
   if (!result.ok) {
     return {
       ok: false,

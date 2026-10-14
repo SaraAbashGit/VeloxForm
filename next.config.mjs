@@ -4,8 +4,9 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   experimental: {
     serverComponentsExternalPackages: ['@react-pdf/renderer'],
-    // Signatures are sent as PNG data URLs; files go straight to storage and do not count here
-    serverActions: { bodySizeLimit: '2mb' },
+    // Signatures and AI attachments are sent inside server actions; customer files go straight to storage.
+    // Vercel accepts at most 4.5MB per request.
+    serverActions: { bodySizeLimit: '4mb' },
     // The PDF font files are read from disk at runtime, so ship them with every server function
     outputFileTracingIncludes: { '/**': ['./lib/pdf/fonts/**'], '/**/*': ['./lib/pdf/fonts/**'] },
   },

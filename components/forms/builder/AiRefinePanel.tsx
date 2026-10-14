@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useFormBuilderStore } from '@/store/formBuilderStore';
 import { refineFormWithAi } from '@/app/(dashboard)/forms/[id]/edit/ai-actions';
 import type { Form, FormField } from '@/types/form';
+import type { AiAttachment } from '@/lib/ai-attachment';
+import { AiAttachmentPicker, pasteHandler } from '@/components/forms/AiAttachmentPicker';
 
 const EXAMPLES = [
   'הוסף שדה טלפון ומייל',
@@ -22,12 +24,13 @@ const EXAMPLES = [
 export function AiRefinePanel({ formId }: { formId: string }) {
   const { form, fields, setForm, setFields } = useFormBuilderStore();
   const [instruction, setInstruction] = useState('');
+  const [attachment, setAttachment] = useState<AiAttachment | null>(null);
   const [previous, setPrevious] = useState<{ form: Form; fields: FormField[] } | null>(null);
   const [isWorking, startWork] = useTransition();
 
   const handleRefine = () => {
     if (!form) return;
-    if (!instruction.trim()) {
+    if (!instruction.trim() && !attachment) {
       toast.error('כתבי מה לשנות בטופס');
       return;
     }
@@ -36,7 +39,7 @@ export function AiRefinePanel({ formId }: { formId: string }) {
         title: form.title,
         description: form.description,
         fields,
-      });
+      }, attachment);
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -45,6 +48,7 @@ export function AiRefinePanel({ formId }: { formId: string }) {
       setForm({ ...form, title: result.title, description: result.description });
       setFields(result.fields);
       setInstruction('');
+      setAttachment(null);
       toast.success('הטופס עודכן! בדקי את השינויים ולחצי "שמור שינויים"');
     });
   };
@@ -67,6 +71,7 @@ export function AiRefinePanel({ formId }: { formId: string }) {
         <Textarea
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
+          onPaste={pasteHandler(setAttachment)}
           rows={2}
           placeholder="לדוגמה: הוסף שדה תאריך לידה, ושנה את הכותרת ל'הרשמה לחוג'..."
           className="border-0 bg-brand-teal text-white placeholder:text-brand-sage focus-visible:ring-brand-cyan focus-visible:ring-offset-brand-ink"
@@ -84,6 +89,7 @@ export function AiRefinePanel({ formId }: { formId: string }) {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <AiAttachmentPicker attachment={attachment} onChange={setAttachment} disabled={isWorking} />
           <Button onClick={handleRefine} disabled={isWorking || !form}>
             <Sparkles className={isWorking ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
             {isWorking ? 'ה-AI מעדכן את הטופס...' : 'עדכן עם AI'}

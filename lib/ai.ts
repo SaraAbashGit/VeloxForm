@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { z } from 'zod';
+import type { AiAttachment } from '@/lib/ai-attachment';
 
 // OPENAI_BASE_URL / OPENAI_MODEL allow any OpenAI-compatible provider (e.g. Gemini) during development.
 // Leave them unset to use OpenAI gpt-4o as defined in the spec.
@@ -34,7 +35,7 @@ export async function askAiJson<T>(
   system: string,
   user: string,
   schema: z.ZodType<T, z.ZodTypeDef, unknown>, // T is the parsed (output) type
-  options: { temperature?: number } = {}
+  options: { temperature?: number; attachment?: AiAttachment | null } = {}
 ): Promise<AiResult<T>> {
   let modelIndex = 0;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS + FALLBACK_MODELS.length; attempt++) {
@@ -44,7 +45,19 @@ export async function askAiJson<T>(
         model,
         messages: [
           { role: 'system', content: system },
-          { role: 'user', content: user },
+          {
+            role: 'user',
+            // An attached image/PDF goes next to the text (Gemini and OpenAI both read data URLs)
+            content: options.attachment
+              ? [
+                  { type: 'text', text: user },
+                  {
+                    type: 'image_url',
+                    image_url: { url: `data:${options.attachment.mimeType};base64,${options.attachment.base64}` },
+                  },
+                ]
+              : user,
+          },
         ],
         response_format: { type: 'json_object' },
         temperature: options.temperature ?? 0.3,
