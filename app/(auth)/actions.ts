@@ -2,8 +2,12 @@
 
 import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { APP_URL } from '@/lib/app-url';
+import { ADMIN_EMAIL, safeNext } from '@/lib/auth/roles';
+import { sendNewBusinessNotification } from '@/lib/email';
+import { approvalUrl } from '@/lib/business-approval';
 
 // Shape returned to useFormState in the auth pages
 export type AuthState = { error?: string; success?: string } | undefined;
@@ -15,6 +19,7 @@ function translateError(message: string) {
   if (/already registered/i.test(message)) return 'כבר קיים חשבון עם המייל הזה';
   if (/password should be at least/i.test(message)) return 'הסיסמה צריכה להכיל לפחות 6 תווים';
   if (/rate limit|too many/i.test(message)) return 'יותר מדי ניסיונות. נסי שוב בעוד כמה דקות';
+  console.error('Auth error:', message); // unexpected: keep the original text for debugging
   return 'משהו השתבש, נסי שוב';
 }
 
@@ -27,7 +32,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   const password = formData.get('password') as string;
   const businessName = formData.get('business_name') as string;
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -37,6 +42,26 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   });
 
   if (error) return { error: translateError(error.message) };
+
+  // An already-registered email comes back as a placeholder user with no identities: leave that account alone
+  if (data.user && data.user.identities?.length) {
+    // Self-registered businesses wait for the platform admin's approval before they can work
+    const { error: statusError } = await createServiceClient().auth.admin.updateUserById(data.user.id, {
+      app_metadata: { business_status: 'pending' },
+    });
+    if (statusError) {
+      await createServiceClient().auth.admin.deleteUser(data.user.id);
+      return { error: 'ההרשמה נכשלה, נסי שוב' };
+    }
+
+    await sendNewBusinessNotification({
+      adminEmail: ADMIN_EMAIL,
+      businessName: businessName || email,
+      businessEmail: email,
+      approvalUrl: approvalUrl(data.user.id),
+    });
+  }
+
   redirect('/verify-email');
 }
 
@@ -50,7 +75,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: translateError(error.message) };
-  redirect('/dashboard');
+  redirect(safeNext(formData.get('next'), '/dashboard'));
 }
 
 export async function signOut() {

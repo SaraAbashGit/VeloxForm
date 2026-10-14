@@ -1,6 +1,8 @@
 import type { User } from '@supabase/supabase-js';
 import { createServiceClient } from '@/lib/supabase/admin';
-import { isClientUser } from '@/lib/auth/roles';
+import { clientName, isClientUser } from '@/lib/auth/roles';
+import { APP_URL } from '@/lib/app-url';
+import { sendNewClientNotification } from '@/lib/email';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -16,9 +18,22 @@ export async function linkClientToBusiness(user: User | null | undefined, busine
   const current = linkedBusinessIds(user);
   if (current.includes(businessId)) return;
 
-  await createServiceClient().auth.admin.updateUserById(user.id, {
+  const service = createServiceClient();
+  const { error } = await service.auth.admin.updateUserById(user.id, {
     app_metadata: { ...user.app_metadata, business_ids: [...current, businessId] },
   });
+  if (error) return;
+
+  // A new customer for this business: let the owner know
+  const { data: business } = await service.from('users').select('email').eq('id', businessId).single();
+  if (business?.email) {
+    await sendNewClientNotification({
+      businessEmail: business.email,
+      clientName: clientName(user),
+      clientEmail: user.email ?? '',
+      clientUrl: `${APP_URL}/clients/${user.id}`,
+    });
+  }
 }
 
 /** Which business a link points to: /b/<businessId> or /forms/<slug> */

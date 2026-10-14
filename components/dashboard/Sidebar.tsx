@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, LayoutDashboard, Plus, User, LogOut, Inbox, Users } from 'lucide-react';
+import { FileText, LayoutDashboard, Plus, User, LogOut, Inbox, Users, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/app/(auth)/actions';
@@ -17,16 +17,24 @@ const navItems = [
   { href: '/profile', label: 'פרופיל', icon: User },
 ];
 
+// Shown only to the platform owner
+const adminItem = { href: '/admin', label: 'ניהול פלטפורמה', icon: ShieldCheck };
+
+function itemsFor(isAdmin: boolean) {
+  return isAdmin ? [...navItems, adminItem] : navItems;
+}
+
 // The most specific matching item wins, so /forms/new highlights "טופס חדש" and not "הטפסים שלי"
-function activeHref(pathname: string) {
-  return navItems
+function activeHref(pathname: string, items: typeof navItems) {
+  return items
     .map((item) => item.href)
     .filter((href) => pathname === href || pathname.startsWith(href + '/'))
     .sort((a, b) => b.length - a.length)[0];
 }
 
-export function Sidebar() {
-  const active = activeHref(usePathname());
+export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
+  const items = itemsFor(isAdmin);
+  const active = activeHref(usePathname(), items);
 
   return (
     <aside className="w-64 bg-brand-600 h-screen p-4 flex flex-col overflow-y-auto">
@@ -36,7 +44,7 @@ export function Sidebar() {
         </Link>
       </div>
       <nav className="flex-1 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => (
+        {items.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -66,11 +74,12 @@ export function Sidebar() {
   );
 }
 
-export function MobileNav() {
-  const active = activeHref(usePathname());
+export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
+  const items = itemsFor(isAdmin);
+  const active = activeHref(usePathname(), items);
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-600 flex justify-around gap-1 overflow-x-auto p-2 z-50">
-      {navItems.map(({ href, label, icon: Icon }) => (
+      {items.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}

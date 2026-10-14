@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { signIn } from '../actions';
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -15,6 +15,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <AuthForm action={signIn} submitLabel="התחבר" pendingLabel="מתחבר...">
+            {searchParams.next && <input type="hidden" name="next" value={searchParams.next} />}
             <div className="space-y-2">
               <Label htmlFor="email">אימייל</Label>
               <Input id="email" name="email" type="email" required dir="ltr" />
