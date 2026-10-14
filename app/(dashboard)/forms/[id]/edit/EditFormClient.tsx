@@ -3,9 +3,10 @@
 import { useEffect, useTransition } from 'react';
 import { useFormBuilderStore } from '@/store/formBuilderStore';
 import { FormBuilder } from '@/components/forms/builder/FormBuilder';
+import { AiRefinePanel } from '@/components/forms/builder/AiRefinePanel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { saveFormFields } from './actions';
+import { saveFormFields, updateFormMeta } from './actions';
 import type { Form, FormField } from '@/types/form';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -54,6 +55,10 @@ export function EditFormClient({ form, fields }: EditFormClientProps) {
     startSave(async () => {
       try {
         await saveFormFields(form.id, storeFields);
+        // The AI panel may also change the title and description
+        if (storeForm && (storeForm.title !== form.title || (storeForm.description ?? '') !== (form.description ?? ''))) {
+          await updateFormMeta(form.id, { title: storeForm.title, description: storeForm.description ?? '' });
+        }
         markClean();
         toast.success('הטופס נשמר בהצלחה');
       } catch {
@@ -103,6 +108,7 @@ export function EditFormClient({ form, fields }: EditFormClientProps) {
           </Button>
         </div>
       </div>
+      <AiRefinePanel formId={form.id} />
       <FormBuilder />
     </div>
   );
