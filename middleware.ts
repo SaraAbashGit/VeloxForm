@@ -10,6 +10,7 @@ function isBusinessArea(path: string) {
     path.startsWith('/submissions') ||
     path.startsWith('/clients') ||
     path.startsWith('/admin') ||
+    path.startsWith('/share') ||
     path === '/forms' ||
     path === '/forms/new' ||
     /^\/forms\/[^/]+\/(edit|submissions)(\/|$)/.test(path)
@@ -70,5 +71,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/profile/:path*', '/submissions/:path*', '/clients/:path*', '/forms/:path*', '/my/:path*', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/profile/:path*', '/submissions/:path*', '/clients/:path*', '/forms/:path*', '/my/:path*', '/admin/:path*', '/share/:path*'],
 };
