@@ -43,24 +43,29 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 
   if (error) return { error: translateError(error.message) };
 
-  // An already-registered email comes back as a placeholder user with no identities: leave that account alone
-  if (data.user && data.user.identities?.length) {
-    // Self-registered businesses wait for the platform admin's approval before they can work
-    const { error: statusError } = await createServiceClient().auth.admin.updateUserById(data.user.id, {
-      app_metadata: { business_status: 'pending' },
-    });
-    if (statusError) {
-      await createServiceClient().auth.admin.deleteUser(data.user.id);
-      return { error: 'ההרשמה נכשלה, נסי שוב' };
-    }
-
-    await sendNewBusinessNotification({
-      adminEmail: ADMIN_EMAIL,
-      businessName: businessName || email,
-      businessEmail: email,
-      approvalUrl: approvalUrl(data.user.id),
-    });
+  // An already-registered email comes back as a placeholder user with no identities and no email is sent
+  if (!data.user?.identities?.length) {
+    return { error: 'כבר קיים חשבון עם המייל הזה. אפשר להתחבר, או לאפס סיסמה דרך "שכחת סיסמה?"' };
   }
+
+  // Signing up again before verifying returns the same account: keep the admin's earlier decision
+  if (data.user.app_metadata?.business_status) redirect('/verify-email');
+
+  // Self-registered businesses wait for the platform admin's approval before they can work
+  const { error: statusError } = await createServiceClient().auth.admin.updateUserById(data.user.id, {
+    app_metadata: { business_status: 'pending' },
+  });
+  if (statusError) {
+    await createServiceClient().auth.admin.deleteUser(data.user.id);
+    return { error: 'ההרשמה נכשלה, נסי שוב' };
+  }
+
+  await sendNewBusinessNotification({
+    adminEmail: ADMIN_EMAIL,
+    businessName: businessName || email,
+    businessEmail: email,
+    approvalUrl: approvalUrl(data.user.id),
+  });
 
   redirect('/verify-email');
 }
