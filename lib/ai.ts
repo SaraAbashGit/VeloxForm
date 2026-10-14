@@ -33,7 +33,7 @@ export type AiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 export async function askAiJson<T>(
   system: string,
   user: string,
-  schema: z.ZodType<T>,
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>, // T is the parsed (output) type
   options: { temperature?: number } = {}
 ): Promise<AiResult<T>> {
   let modelIndex = 0;

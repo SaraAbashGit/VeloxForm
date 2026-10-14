@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { FormField } from '@/types/form';
+import { cleanConditions } from '@/lib/form-conditions';
 
 export async function saveFormFields(formId: string, fields: FormField[]) {
   const supabase = await createClient();
@@ -22,7 +23,8 @@ export async function saveFormFields(formId: string, fields: FormField[]) {
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (fields.some((f) => !UUID.test(f.id))) throw new Error('Invalid field id');
 
-  const rows = fields.map((f, i) => ({
+  // A condition may point only at another field of this form that offers the expected option
+  const rows = cleanConditions(fields).map((f, i) => ({
     id: f.id,
     form_id: formId,
     type: f.type,
@@ -32,6 +34,7 @@ export async function saveFormFields(formId: string, fields: FormField[]) {
     options: f.options ?? null,
     default_value: f.default_value ?? null,
     field_order: i,
+    show_if: f.show_if ? { field_id: f.show_if.field_id, equals: f.show_if.equals } : null,
   }));
 
   // Update in place (ids stay stable) instead of delete-all + insert, so existing answers keep their field ids
