@@ -10,6 +10,8 @@ import { saveGeneratedForm } from './save-action';
 import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { AiAttachmentPicker, pasteHandler } from '@/components/forms/AiAttachmentPicker';
+import type { AiAttachment } from '@/lib/ai-attachment';
 
 // One-click prompts matching the target audiences in the spec
 const EXAMPLES = [
@@ -21,19 +23,20 @@ const EXAMPLES = [
 
 export default function NewFormPage() {
   const [prompt, setPrompt] = useState('');
+  const [attachment, setAttachment] = useState<AiAttachment | null>(null);
   const [isWorking, startWork] = useTransition();
   const [step, setStep] = useState<'generating' | 'saving'>('generating');
 
   // Generate, save and jump straight to the editor - no separate "save" step
   const handleGenerate = () => {
-    if (!prompt.trim()) {
-      toast.error('יש להזין תיאור לטופס');
+    if (!prompt.trim() && !attachment) {
+      toast.error('יש להזין תיאור לטופס או לצרף תמונה/קובץ');
       return;
     }
     startWork(async () => {
       try {
         setStep('generating');
-        const result = await generateFormFromPrompt(prompt);
+        const result = await generateFormFromPrompt(prompt, attachment);
         if (!result.ok) {
           toast.error(result.error);
           return;
@@ -57,7 +60,9 @@ export default function NewFormPage() {
             <Sparkles className="h-5 w-5 text-brand-cyan" />
             תיאור הטופס
           </CardTitle>
-          <CardDescription className="text-brand-sage">אפשר לכתוב חופשי או לבחור אחת מהדוגמאות</CardDescription>
+          <CardDescription className="text-brand-sage">
+            אפשר לכתוב חופשי, לבחור דוגמה, או לצרף תמונה/PDF של טופס קיים (גם בהדבקה עם Ctrl+V)
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -66,6 +71,7 @@ export default function NewFormPage() {
               id="prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
+              onPaste={pasteHandler(setAttachment)}
               rows={5}
               placeholder="לדוגמה: טופס הרשמה לחוג שחייה לילדים עם פרטי הורה, גיל וחתימה..."
               className="border-0 bg-brand-teal text-base text-white placeholder:text-brand-sage focus-visible:ring-brand-cyan focus-visible:ring-offset-brand-ink"
@@ -83,6 +89,7 @@ export default function NewFormPage() {
               </button>
             ))}
           </div>
+          <AiAttachmentPicker attachment={attachment} onChange={setAttachment} disabled={isWorking} />
           <div className="flex flex-wrap items-center gap-4">
             <Button onClick={handleGenerate} disabled={isWorking} size="lg">
               <Sparkles className={isWorking ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />

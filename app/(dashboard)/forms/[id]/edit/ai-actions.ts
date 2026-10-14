@@ -7,6 +7,7 @@ import { isClientUser } from '@/lib/auth/roles';
 import { aiFormSchemaValidator, AI_FIELD_FORMAT } from '@/lib/validations/ai-form-schema';
 import { aiFieldsToFormFields } from '@/lib/ai-form-fields';
 import type { FormField } from '@/types/form';
+import { attachmentError, ATTACHMENT_NOTE, type AiAttachment } from '@/lib/ai-attachment';
 
 const SYSTEM_PROMPT = `You edit an existing digital form according to the user's request.
 You receive the current form as JSON. Apply ONLY the requested changes and keep everything else exactly as it is.
@@ -22,7 +23,8 @@ type RefineResult =
 export async function refineFormWithAi(
   formId: string,
   instruction: string,
-  current: { title: string; description?: string; fields: FormField[] }
+  current: { title: string; description?: string; fields: FormField[] },
+  attachment: AiAttachment | null = null
 ): Promise<RefineResult> {
   const { limit, windowMs } = LIMITS.generateForm;
   if (isRateLimited('refineFormWithAi', limit, windowMs)) return { ok: false, error: RATE_LIMIT_MESSAGE };
@@ -36,7 +38,9 @@ export async function refineFormWithAi(
   if (!form) return { ok: false, error: 'הטופס לא נמצא' };
 
   const request = instruction.trim().slice(0, 1000);
-  if (!request) return { ok: false, error: 'כתבי מה לשנות בטופס' };
+  if (!request && !attachment) return { ok: false, error: 'כתבי מה לשנות בטופס' };
+  const badAttachment = attachmentError(attachment);
+  if (badAttachment) return { ok: false, error: badAttachment };
 
   // Existing fields are keyed by their id, so the answer can be matched back to them
   const currentJson = JSON.stringify({
@@ -55,8 +59,10 @@ export async function refineFormWithAi(
 
   const result = await askAiJson(
     SYSTEM_PROMPT,
-    `Current form:\n${currentJson}\n\nRequested change:\n${request}`,
-    aiFormSchemaValidator
+    `Current form:\n${currentJson}\n\nRequested change:\n${request || 'Update the form according to the attachment.'}` +
+      (attachment ? `\n\n${ATTACHMENT_NOTE}` : ''),
+    aiFormSchemaValidator,
+    { attachment }
   );
   if (!result.ok) {
     return {
