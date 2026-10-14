@@ -5,6 +5,7 @@ import { isClientUser } from '@/lib/auth/roles';
 import { nanoid } from 'nanoid';
 import { redirect } from 'next/navigation';
 import type { AIFormSchema } from '@/types/form';
+import { aiFieldsToFormFields } from '@/lib/ai-form-fields';
 
 export async function saveGeneratedForm(schema: AIFormSchema) {
   const supabase = await createClient();
@@ -27,14 +28,17 @@ export async function saveGeneratedForm(schema: AIFormSchema) {
 
   if (formError || !form) throw new Error(formError?.message ?? 'Failed to create form');
 
-  const fields = schema.fields.map((field, index) => ({
+  // Real ids are created here so that conditional fields (show_if) can point at each other
+  const fields = aiFieldsToFormFields(schema.fields, form.id).map((field) => ({
+    id: field.id,
     form_id: form.id,
     type: field.type,
     label: field.label,
     placeholder: field.placeholder ?? null,
     required: field.required,
     options: field.options ?? null,
-    field_order: index,
+    field_order: field.field_order,
+    show_if: field.show_if ?? null,
   }));
 
   const { error: fieldsError } = await supabase.from('form_fields').insert(fields);

@@ -10,6 +10,7 @@ import { sendSubmissionNotification } from '@/lib/email';
 import { APP_URL } from '@/lib/app-url';
 import { uploadSignature, confirmUpload } from '@/lib/storage';
 import type { Form, FormField, SubmissionAnswer } from '@/types/form';
+import { visibleFields } from '@/lib/form-conditions';
 
 // A failure the customer can understand; anything else is reported as a generic error
 class SubmitError extends Error {}
@@ -53,7 +54,9 @@ async function saveSubmission(
 
   if (formError || !form) throw new SubmitError('הטופס לא נמצא או שאינו פעיל יותר');
 
-  const fields = (form.form_fields as FormField[]).sort((a, b) => a.field_order - b.field_order);
+  const allFields = (form.form_fields as FormField[]).sort((a, b) => a.field_order - b.field_order);
+  // Conditional fields the customer's answers keep hidden are not required, not saved and not in the PDF
+  const fields = visibleFields(allFields, rawData);
 
   // Never trust the browser: re-check required fields and cap text length before saving anything
   const MAX_TEXT = 5000;

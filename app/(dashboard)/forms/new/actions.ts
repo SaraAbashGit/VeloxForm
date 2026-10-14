@@ -2,7 +2,7 @@
 
 import { isRateLimited, LIMITS, RATE_LIMIT_MESSAGE } from '@/lib/rate-limit';
 import { AIFormSchema } from '@/types/form';
-import { aiFormSchemaValidator } from '@/lib/validations/ai-form-schema';
+import { aiFormSchemaValidator, AI_FIELD_FORMAT } from '@/lib/validations/ai-form-schema';
 import { askAiJson } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { isClientUser } from '@/lib/auth/roles';
@@ -11,19 +11,7 @@ type GenerateResult = { ok: true; form: AIFormSchema } | { ok: false; error: str
 
 const SYSTEM_PROMPT = `You are an expert digital form structure generator.
 Return ONLY a raw, valid JSON object matching the structure below with no markdown styling, wrappers, or text explanations:
-{
-  "form_title": "string",
-  "form_description": "string",
-  "fields": [
-    {
-      "type": "text|textarea|number|email|phone|checkbox|radio|select|date|signature|file_upload",
-      "label": "string",
-      "placeholder": "string",
-      "required": true|false,
-      "options": ["option1","option2"]
-    }
-  ]
-}
+${AI_FIELD_FORMAT}
 Crucial Instructions: Always append a "signature" type field automatically at the end of the form if the input implies a declaration, waiver, contract, agreement, or formal signup.`;
 
 export async function generateFormFromPrompt(userPrompt: string): Promise<GenerateResult> {

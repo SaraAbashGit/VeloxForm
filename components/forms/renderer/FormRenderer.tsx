@@ -4,6 +4,7 @@ import { useForm, type FieldErrors } from 'react-hook-form';
 import { toast } from 'sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { buildDynamicFormSchema } from '@/lib/validations/dynamic-form';
+import { visibleFields } from '@/lib/form-conditions';
 import { FieldRenderer } from '@/components/forms/fields/FieldRenderer';
 import { Button } from '@/components/ui/button';
 import type { FormField } from '@/types/form';
@@ -17,9 +18,11 @@ interface FormRendererProps {
 }
 
 export function FormRenderer({ fields, onSubmit, isSubmitting, initialValues }: FormRendererProps) {
-  const schema = buildDynamicFormSchema(fields);
-  const { control, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, watch, formState: { errors } } = useForm({
+    // Validate only the fields the customer can see: a hidden required field must not block sending.
+    // The schema also drops hidden fields' values, so they are never submitted.
+    resolver: (values, context, options) =>
+      zodResolver(buildDynamicFormSchema(visibleFields(fields, values)))(values, context, options),
     defaultValues: Object.fromEntries(fields.map((f) => [f.id, initialValues?.[f.id] ?? f.default_value ?? ''])),
   });
 
@@ -30,10 +33,13 @@ export function FormRenderer({ fields, onSubmit, isSubmitting, initialValues }: 
     if (first) document.getElementById(`field-${first.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // Conditional fields appear and disappear as the customer answers
+  const shown = visibleFields(fields, watch());
+
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
-      {fields.map((field) => (
-        <div key={field.id} id={`field-${field.id}`}>
+      {shown.map((field) => (
+        <div key={field.id} id={`field-${field.id}`} className="animate-in fade-in">
           <FieldRenderer field={field} control={control} />
           {errors[field.id] && (
             <p className="text-sm text-destructive mt-1">

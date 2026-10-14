@@ -29,8 +29,10 @@ import type { FormField } from '@/types/form';
 
 function SortableField({ field, onDelete }: { field: FormField; onDelete: (field: FormField) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: field.id });
-  const { selectedFieldId, selectField } = useFormBuilderStore();
+  const { selectedFieldId, selectField, fields } = useFormBuilderStore();
   const isSelected = selectedFieldId === field.id;
+  const controller = field.show_if && fields.find((f) => f.id === field.show_if!.field_id);
+  const conditionText = controller ? `מוצג רק אם "${controller.label}" = ${field.show_if!.equals}` : null;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -60,6 +62,7 @@ function SortableField({ field, onDelete }: { field: FormField; onDelete: (field
         {field.placeholder && (
           <p className="text-xs text-muted-foreground mt-1">{field.placeholder}</p>
         )}
+        {conditionText && <p className="text-xs text-amber-700 mt-1">👁 {conditionText}</p>}
       </div>
       <Button
         variant="ghost"

@@ -12,6 +12,13 @@ export interface FormField {
   options?: string[];
   default_value?: string;
   field_order: number;
+  /** Show the field only when another field has a given answer (null/undefined = always shown) */
+  show_if?: FieldCondition | null;
+}
+
+export interface FieldCondition {
+  field_id: string;
+  equals: string;
 }
 
 export interface Form {
@@ -50,5 +57,8 @@ export interface AIFormSchema {
     placeholder?: string;
     required: boolean;
     options?: string[];
+    /** The AI's own name for the field, so conditions can point at fields that have no id yet */
+    key?: string;
+    show_if?: { key: string; equals: string } | null;
   }[];
 }
