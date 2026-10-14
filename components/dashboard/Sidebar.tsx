@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, LayoutDashboard, Plus, User, LogOut, Inbox, Users, ShieldCheck } from 'lucide-react';
+import { FileText, LayoutDashboard, Plus, User, LogOut, Inbox, Users, ShieldCheck, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/app/(auth)/actions';
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/forms', label: 'הטפסים שלי', icon: FileText },
   { href: '/submissions', label: 'הגשות', icon: Inbox },
   { href: '/clients', label: 'הלקוחות שלי', icon: Users },
+  { href: '/share', label: 'שיתוף העסק', icon: QrCode },
   { href: '/forms/new', label: 'טופס חדש', icon: Plus },
   { href: '/profile', label: 'פרופיל', icon: User },
 ];
@@ -78,7 +79,7 @@ export function MobileNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const items = itemsFor(isAdmin);
   const active = activeHref(usePathname(), items);
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-600 flex justify-around gap-1 overflow-x-auto p-2 z-50">
+    <nav className="md:hidden print:hidden fixed bottom-0 inset-x-0 bg-brand-600 flex justify-around gap-1 overflow-x-auto p-2 z-50">
       {items.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
